@@ -1,7 +1,7 @@
 # AskSQL
 
 ## Text-to-SQL: Converting Natural Language Queries into SQL Statements
-<img src="assets/problem_statement.png" width="900" height="600" >
+<img src="assets/problem_statement.png" width="800" height="300" >
 
 
 ---
@@ -22,7 +22,7 @@
 ## Problem Statement
 Given a natural language query (NLQ) on a Relational Database (RDB) with a specified schema, automatically generate a valid SQL query. It’s designed for non-technical users who need easy access to database queries without coding in SQL.
 
-<img src="assets/poster.png" width="900" height="600" >
+<img src="assets/poster.png" width="600" height="900" >
 
 ---
 
@@ -53,9 +53,6 @@ The final dataset has about **290,000** text-to-SQL samples.
 3. **Hyperparameter Tuning**  
    - Adjusted learning rate, epochs, batch size, `model_max_length`, etc., keeping hardware constraints in mind.
 
-<img src="assets/image1.png" width="900" height="600" >
-<img src="assets/image2.png" width="900" height="600" >
-<img src="assets/image3.png" width="900" height="600" >
 <img src="assets/image4.png" width="900" height="600" >
 
 ---
