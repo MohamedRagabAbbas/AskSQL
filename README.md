@@ -45,13 +45,13 @@ The final dataset has about **290,000** text-to-SQL samples.
 
 2. **Retrieval-Augmented Generation (RAG)**  
    - Pulls relevant info from a knowledge store to improve the model's accuracy and relevance.
-<img src="assets/rag.png" width="900" height="600" >
+<img src="assets/rag.png" width="1000" height="250" >
 
 
 3. **Hyperparameter Tuning**  
    - Adjusted learning rate, epochs, batch size, `model_max_length`, etc., keeping hardware constraints in mind.
 
-<img src="assets/image4.png" width="900" height="600" >
+<img src="assets/image4.png" width="600" height="400" >
 
 ---
 
@@ -78,7 +78,7 @@ The final dataset has about **290,000** text-to-SQL samples.
 
 **Deepseek-coder-1.3b-instruct**  
 This model is based on the **DeepSeek Large Language Model (LLM)** framework (decoder-only Transformer).
-<img src="assets/decoder_only.png" width="900" height="600" >
+<img src="assets/decoder_only.png" width="600" height="400" >
 
 
 ---
