@@ -102,5 +102,5 @@ This model is based on the **DeepSeek Large Language Model (LLM)** framework (de
 ## Progress
 
 This section shows the score progression over different training phases compared to a baseline model on the Text-2-SQL benchmark.
-<img src="assets/image5.png" width="900" height="600" >
+<img src="assets/image5.png" width="900" height="601" >
 
