@@ -22,8 +22,6 @@
 ## Problem Statement
 Given a natural language query (NLQ) on a Relational Database (RDB) with a specified schema, automatically generate a valid SQL query. It’s designed for non-technical users who need easy access to database queries without coding in SQL.
 
-<img src="assets/poster.png" width="600" height="900" >
-
 ---
 
 ## Dataset
