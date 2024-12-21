@@ -1,0 +1,347 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+  <meta name="description" content="">
+  <meta name="author" content="">
+
+  <title>Text-to-SQL: Converting Natural Language Queries into SQL Statements</title>
+
+  <!-- Bootstrap core CSS -->
+  <link href="../vendor/bootstrap/css/bootstrap.min.css" rel="stylesheet">
+
+</head>
+
+<body>
+
+  <!-- Navigation -->
+  <nav class="navbar navbar-expand-lg navbar-dark bg-dark static-top">
+    <div class="container">
+      <a class="navbar-brand" href="../home.html">Practical Machine Deep Learning</a>
+      <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarResponsive" aria-controls="navbarResponsive" aria-expanded="false" aria-label="Toggle navigation">
+        <span class="navbar-toggler-icon"></span>
+      </button>
+      <div class="collapse navbar-collapse" id="navbarResponsive">
+        <ul class="navbar-nav ml-auto">
+          <li class="nav-item active">
+            <a class="nav-link" href="../home.html">Home
+              <span class="sr-only">(current)</span>
+            </a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../about.html">About</a>
+          </li>
+          <li class="nav-item">
+            <a class="nav-link" href="../contact.html">Contact</a>
+          </li>
+        </ul>
+      </div>
+    </div>
+  </nav>
+
+  <!-- Page Content -->
+  <div class="container">
+    <div class="row">
+      <div class="col-lg-12 text-center">
+        <h1 class="mt-5">Text-to-SQL: Converting Natural Language Queries into SQL Statements
+        </h1>
+        <ul class="list-unstyled">
+          <li>Youssef Mansour</li>
+          <li>Mohamad Abbas</li>
+        </ul>
+      </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-lg-12 text-left">
+        <h2 class="mt-5">Problem Statement</h2>
+		<p>
+			Given a natural language query (NLQ) on a Relational Database (RDB) with a specific schema, produce a SQL query.
+		</p>
+    <br/> <!-- Empty Line before the image -->
+    <div class="img-container" align="center"> <!-- Block parent element -->
+        <img src="resources/images/problem_statement.png" class="img-fluid text-center">
+    </div>
+    <br/> <!-- Empty Line after the image -->
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-12 text-left">
+        <h2 class="mt-5">Dataset</h2>
+
+        <p>
+          NSText2SQL dataset used to train our model. The data is curated from more than 20 different public sources across the web. All of these datasets come with existing text-to-SQL pairs. Applied to the data are cleaning and pre-processing techniques including table schema augmentation, SQL cleaning, and instruction generation using existing LLMs. The resulting dataset contains around 290,000 samples of text-to-SQL pairs.
+		</p>
+
+		<br/> <!-- Empty Line before the image -->
+	    <div class="img-container" align="center"> <!-- Block parent element -->
+      		<img src="resources/images/NS_dataset.png" class="img-fluid text-center">
+    	</div>
+    	<br/> <!-- Empty Line after the image -->
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-12 text-left">
+        <h2 class="mt-5">Input/Output Examples</h2>
+
+      <!-- Empty Line before the first row of images -->
+<div class="img-row" style="display: flex; justify-content: center; flex-direction: column; align-items: center; gap: 20px; text-align: center;">
+  <!-- Image 1 -->
+  <div class="img-container">
+      <img src="resources/images/example1.jpeg" class="img-fluid" style="max-width: 500px;">
+      <p>Prompt: What's the fewest number of pages for the title al-jiniral fi matahatihi?</p>
+  </div>
+  <!-- Image 2 -->
+  <div class="img-container">
+      <img src="resources/images/example2.jpeg" class="img-fluid" style="max-width: 500px;">
+      <p>Prompt: What is the power of b-b wheel arrangement, built in 1952?</p>
+  </div>
+  <!-- Image 3 -->
+  <div class="img-container">
+      <img src="resources/images/example3.jpeg" class="img-fluid" style="max-width: 500px;">
+      <p>Prompt: What is the lowest Share, when Rating is greater than 1.3, and when Air Date is May 28, 2008?</p>
+  </div>
+</div>
+<br/> <!-- Empty Line after the first row -->
+    
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-12 text-left">
+        <h2 class="mt-5">Orignial Model from Literature</h2>
+
+        <p>
+          <b>Deepseek-coder-1.3b-instruct</b>
+          This model is part of series models built upon the same framework as the DeepSeek Large Language Model (LLM) outlined by DeepSeek-AI (2024). It is decoder-only Transformer.          
+		</p>
+
+      <br/> <!-- Empty Line before the image -->
+      <div class="img-row" style="display: flex; justify-content: center; align-items: center; gap: 20px; text-align: center;">
+          <!-- Spider Image -->
+          <div class="img-container">
+              <img src="resources/images/model_hyperparameters.png" class="img-fluid" style="max-width: 400px;">
+              <p>Table 2 | Hyperparameters of DeepSeek-Coder-1.3b-instruct.</p>
+          </div>
+          <!-- Bird Image -->
+          <div class="img-container">
+              <img src="resources/images/decoder_only.png" class="img-fluid" style="max-width: 400px;">
+              <p>Decoder-only Transformer</p>
+          </div>
+      </div>
+      <br/> <!-- Empty Line after the image -->
+      </div>
+    </div>
+
+    <div class="row">
+      <div class="col-lg-12 text-left">
+        <h2 class="mt-5">Proposed Updates</h2>
+
+        <p>
+          No Changes made to the original architecture of  the model to leverage its pre-training capacity, however we applied LoRA to freeze some layers. 
+
+
+
+		</p>
+
+		<h5 class="mt-5">QLora</h5>
+		<p>
+            <p>QLoRA is a technique designed to reduce the memory footprint of neural networks while preserving accuracy by quantizing weights and activations to 4-bit or 8-bit precision.</p>
+            <p>We faced VRAM constraints (15GB+), resulting in out-of-memory issues. Applying QLoRA reduced GPU memory usage to approximately 4.9GB.</p>
+            <b>QLoRA Implementation for Parameter-Efficient Fine-Tuning</b>
+            <ul> <li><strong>4-bit Quantization:</strong> Reduces memory and computation by using 4-bit weights.</li> <li><strong>Double Quantization:</strong> Enhances accuracy with NF4, while minimizing performance loss.</li> <li><strong>LoRA:</strong> Fine-tunes key layers to reduce the number of parameters.</li> </ul>
+  
+		<br/> <!-- Empty Line before the image -->
+	    <div class="img-container" align="center"> <!-- Block parent element -->
+      		<img src="resources/images/lora.png" class="img-fluid text-center">
+    	</div>
+    	<br/> <!-- Empty Line after the image -->
+
+		<h5 class="mt-5">RAG (Retrieval-Augmented Generation)</h5>
+		<p>
+			To retrieve relevant information from knowledge store based on the user query to help enhance the relevance of model output.
+		</p>
+		<br/> <!-- Empty Line before the image -->
+	    <div class="img-container" align="center"> <!-- Block parent element -->
+      		<img src="resources/images/rag.png" class="img-fluid text-center">
+    	</div>
+    	<br/> <!-- Empty Line after the image -->
+
+    	<h5 class="mt-5">Fine Tuning</h5>
+
+		<br/> <!-- Empty Line before the image -->
+	    <div class="img-container" align="center"> <!-- Block parent element -->
+      		<img src="resources/images/fine_tuning.png" class="img-fluid text-center">
+    	</div>
+    	<br/> <!-- Empty Line after the image -->
+
+      </div>
+    </div>
+
+
+
+    <div class="row">
+      <div class="col-lg-12 text-left">
+        <h2 class="mt-5">Results</h2>
+
+        <p>
+			comparison of our results to the original model and state of the art shown in the leaderboard.
+		</p>
+
+<!-- Empty Line before the first row of images -->
+<div class="img-row" style="display: flex; justify-content: center; align-items: center; gap: 20px; text-align: center;">
+  <!-- Image 1 -->
+  <div class="img-container">
+      <img src="resources/images/image1.png" class="img-fluid" style="max-width: 300px;">
+      <p>Training on Spider Dataset</p>
+  </div>
+  <!-- Image 2 -->
+  <div class="img-container">
+      <img src="resources/images/image2.png" class="img-fluid" style="max-width: 300px;">
+      <p>Training on MIMIC ||| & MIMICSQL</p>
+  </div>
+  <!-- Image 3 -->
+  <div class="img-container">
+      <img src="resources/images/image3.png" class="img-fluid" style="max-width: 300px;">
+      <p>Training on ATIS</p>
+  </div>
+</div>
+<br/> <!-- Empty Line after the first row -->
+
+<!-- Empty Line before the first row of images -->
+<div class="img-row" style="display: flex; justify-content: center; align-items: center; gap: 20px; text-align: center;">
+  <!-- Image 1 -->
+  <div class="img-container">
+      <img src="resources/images/image4.png" class="img-fluid" style="max-width: 300px;">
+      <p>Figure shows loss and validation accuracy, training for 10 days on our dataset</p>
+  </div>
+  <!-- Image 2 -->
+  <div class="img-container">
+      <img src="resources/images/image5.png" class="img-fluid" style="max-width: 300px;">
+      <p>Results obtained on Text-to-SQL benchmark during different milestones with final score of 22%</p>
+  </div>
+  <!-- blue score result-->
+    <div class="img-container">
+      <img src="resources/images/blusScore.jpeg" class="img-fluid" style="max-width: 300px;">
+      <p>Blue score results obtained</p>
+  </div>
+</div>
+<br/> <!-- Empty Line after the first row -->
+
+      </div>
+    </div>
+
+
+    <div class="row">
+      <div class="col-lg-12 text-left">
+        <h2 class="mt-5">Technical report</h2>
+
+
+
+    <ul> 
+      <li><strong>Programming Framework:</strong> Python Jupyter Notebook</li>
+      <li><strong>Training Hardware:</strong> Machines at the Machine Learning Lab </li> 
+      <ul><img src="resources/images/gpu.jpeg" class="img-fluid" style="max-width: 500px;"></ul> 
+      <li><strong>Remote Access:</strong> Anydesk for full remote access to the device due to large model and dataset size </li> 
+      <ul><img src="resources/images/anydesk.jpeg" class="img-fluid" style="max-width: 500px;"></ul> 
+      <li><strong>Training Duration:</strong> 13 days</li> <li><strong>Number of Epochs:</strong> More than 1 epoch</li> 
+      <li><strong>Time per Epoch:</strong> Over 10 days</li> </ul>
+      </div>
+    </div>
+
+	<div class="row">
+	  <div class="col-lg-12 text-left">
+	    <h2 class="mt-5">Conclusion</h2>
+
+
+    <h3>Lessons Learned and Interesting Findings</h1>
+    <ul>
+        <li><strong>Literature review:</strong> Conducted extensive literature reviews to grasp cutting-edge research, understand trade-offs, and align methods with current trends.</li>
+        <li><strong>GPU usage monitoring:</strong> Learned how to monitor GPU usage effectively using command-line tools to optimize resource utilization during training.</li>
+        <li><strong>RAG systems:</strong> Understood the unique advantages of Retrieval-Augmented Generation (RAG) systems, particularly when integrated with databases for enhanced performance.</li>
+        <li><strong>Hugging Face models:</strong> Gained experience in setting up, utilizing APIs, and customizing Hugging Face models for diverse tasks.</li>
+        <li><strong>Comparing benchmarks:</strong> Analyzed and compared benchmarks to evaluate their strengths, weaknesses, and relevance to specific tasks.</li>
+        <li><strong>Comparing datasets:</strong> Compared datasets to understand their pros and cons, and learned techniques for merging datasets for improved model training.</li>
+        <li><strong>LORA:</strong> Explored Low-Rank Adaptation (LORA) for efficient parameter fine-tuning, accelerating training, and reducing training costs.</li>
+        <li><strong>AnyDesk:</strong> Utilized AnyDesk for seamless remote device control to manage experiments and troubleshoot issues.</li>
+        <li><strong>Analyzing model behavior:</strong> Investigated models' behavior to understand why they produce specific output formats and identify areas for improvement.</li>
+        <li><strong>Model size relation to hardware:</strong> Learned the relationship between model size and hardware requirements.</li>
+    </ul>
+
+	  </div>
+	</div>
+
+	<div class="row">
+	  <div class="col-lg-12 text-left">
+	    <h2 class="mt-5">References</h2>
+
+      <ul>
+          <li>
+              Deng, N., Chen, Y., & Zhang, Y. (2022, August 22). Recent Advances in Text-to-SQL: A survey of what we have and what we expect. 
+              <a href="https://arxiv.org/abs/2208.10099" target="_blank">arXiv.org</a>.
+          </li>
+          <li>
+              Problem Statement Source: Katsogiannis-Meimarakis, G., & Koutrika, G. (2023). A survey on deep learning approaches for text-to-SQL. 
+              The VLDB Journal, 32(4), 905–936. 
+              <a href="https://doi.org/10.1007/s00778-022-00776-8" target="_blank">https://doi.org/10.1007/s00778-022-00776-8</a>.
+          </li>
+          <li>
+              Spider 2.0: Evaluating Language Models on Real-World Enterprise Text-to-SQL workflows. (n.d.-b). 
+              <a href="https://spider2-sql.github.io/" target="_blank">https://spider2-sql.github.io/</a>.
+          </li>
+          <li>
+              DB-GPT-Hub: Towards Open Benchmarking Text-to-SQL Empowered by Large Language Models
+          </li>
+          <li>
+              Li, R., Allal, L. B., Zi, Y., Muennighoff, N., Kocetkov, D., Mou, C., Marone, M., Akiki, C., Li, J., Chim, J., Liu, Q., Zheltonozhskii, E., Zhuo, T. Y., Wang, T., Dehaene, O., Davaadorj, M., Lamy-Poirier, J., Monteiro, J., Shliazhko, O., ... Harm, D. V. (2023, May 9). StarCoder: may the source be with you! 
+              <a href="https://arxiv.org/abs/2305.06161" target="_blank">arXiv.org</a>.
+          </li>
+          <li>
+              DeepSeek-Ai, Bi, X., Chen, D., Chen, G., Chen, S., Dai, D., Deng, C., Ding, H., Dong, K., Du, Q., Fu, Z., Gao, H., Gao, K., Gao, W., Ge, R., Guan, K., Guo, D., Guo, J., Hao, G., ... Zou, Y. (2024, January 5). DeepSeek LLM: Scaling Open-Source Language Models with Longtermism. 
+              <a href="https://arxiv.org/abs/2401.02954" target="_blank">arXiv.org</a>.
+          </li>
+          <li>
+              <a href="https://discuss.huggingface.co/t/decoder-only-model-how-to-have-it-not-include-the-prompt-in-its-output/86759" target="_blank">Decoder-only model: How to have it not include the prompt in its output</a>.
+          </li>
+          <li>
+              Benchmark URL:
+              <a href="https://llmsql.streamlit.app/" target="_blank">LLM SQL Streamlit App</a>.
+          </li>
+          <li>
+            Model URL:
+            <a href="https://arxiv.org/abs/2401.14196" target="_blank">Model Deepseek</a>.
+        </li>
+        <li>
+          Dataset URL:
+          <a href="https://huggingface.co/datasets/NumbersStation/NSText2SQL" target="_blank">NumbersStation/NSText2SQL</a>.
+      </li>
+          <li>
+              <a href="https://huggingface.co/docs/transformers/en/main_classes/trainer" target="_blank">Hugging Face Transformers Trainer Documentation</a>.
+          </li>
+          <li>
+              <a href="https://python.langchain.com/docs/tutorials/rag/" target="_blank">LangChain RAG Tutorial</a>.
+          </li>
+          <li>
+              <a href="https://beeny-ds.tistory.com/entry/LLAMA-%EB%AA%A8%EB%8D%B8-%EA%B5%AC%EC%A1%B0-%ED%8C%8C%EC%95%85" target="_blank">LLAMA Model Structure Analysis</a>.
+          </li>
+      </ul>
+	  </div>
+	</div>
+
+  </div>
+
+
+
+  <!-- Bootstrap core JavaScript -->
+  <script src="../vendor/jquery/jquery.slim.min.js"></script>
+  <script src="../vendor/bootstrap/js/bootstrap.bundle.min.js"></script>
+
+</body>
+
+</html>

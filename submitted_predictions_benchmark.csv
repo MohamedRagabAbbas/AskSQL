@@ -1,0 +1,1231 @@
+question,schema,sql
+What is the average commission earned per store for each affiliate program?,COUPON_PLATFORM,"SELECT AFFILIATENETWORKID, AVG(COMMISSIONVALUE) as Average_Commission
+FROM TRANSACTIONS
+GROUP BY AFFILIATENETWORKID;"
+"What is the mean value of total commission per store, grouped by each affiliate program?",COUPON_PLATFORM,COMMISSION_VALUE = TRANSACTIONS.COMMISSIONVALUE.groupby(TRANSACTIONS.PROGRAM).mean()
+What is the average commission per user for each subscription status (subscribed or not subscribed to newsletters)?,COUPON_PLATFORM,"SELECT
+    n.HASSUBSCRIBED,
+    AVG(COALESCE(tot_commission, 0)) AS average_commission_per_user
+FROM (
+    SELECT
+        n.USERID,
+        n.HASSUBSCRIBED,
+        SUM(t.COMMISSIONVALUE) AS tot_commission
+    FROM
+        NEWSLETTERS n
+    LEFT JOIN
+        TRANSACTIONS t ON n.USERID = t.USERID
+    GROUP BY
+        n.USERID, n.HASSUBSCRIBED
+) sub
+GROUP BY
+    n.HASSUBSCRIBED;"
+How does the average user commission differ between users who are subscribed to the newsletter and those who are not?,COUPON_PLATFORM,"SELECT AVG(COMMISSIONVALUE) - (SELECT AVG(COMMISSIONVALUE) FROM TRANSACTIONS WHERE PARTNERSALEID IS NOT NULL) AS Difference
+FROM TRANSACTIONS
+WHERE PARTNERSALEID IS NOT NULL;"
+"What is the total transaction revenue for each category in the store, where transaction revenue is calculated as the commission value multiplied by the order total?",COUPON_PLATFORM,"SELECT S.CATEGORYID, SUM(T.COMMISSIONVALUE * T.ORDERTOTAL) AS TOTAL_REVENUE
+FROM TRANSACTIONS T
+JOIN STORES S ON T.STOREID = S.ID
+GROUP BY S.CATEGORYID;"
+"What is the aggregated revenue, calculated as the product of commission value and order total, for each category in the stores?",COUPON_PLATFORM,"SELECT CATEGORYID, SUM(COMMISSIONVALUE * ORDERTOTAL) AS AGGREGATED_REVENUE
+FROM TRANSACTIONS
+GROUP BY CATEGORYID;"
+What is the average net votes (votes up minus votes down) for coupons grouped by whether they are featured or not?,COUPON_PLATFORM,"SELECT ISFEATURED, AVG(VOTESUP - VOTESDOWN) as Average_Net_Votes
+FROM COUPONS
+GROUP BY ISFEATURED;"
+Can you provide the average difference between up votes and down votes for featured and non-featured coupons?,COUPON_PLATFORM,"SELECT
+    ISFEATURED,
+    AVG(VOTESUP - VOTESDOWN) AS average_vote_difference
+FROM
+    COUPONS
+GROUP BY
+    ISFEATURED;"
+What is the cost per click for each campaign in the CPC table?,COUPON_PLATFORM,"SELECT AVG(COST/CLICKS) as Average_Cost_Per_Click
+FROM CPC;"
+What is the average cost per click for every campaign in the CPC table?,COUPON_PLATFORM,"SELECT AVG(COST/CLICKS) as Average_Cost_Per_Click
+FROM CPC;"
+What is the average commission ratio for each affiliate network considering only stores that have more than 10 transactions?,COUPON_PLATFORM,SELECT AVG(COMMISSIONVALUE/ORDERTOTAL) FROM TRANSACTIONS WHERE PROGRAM = 'valid_program' AND ORDERTOTAL > 10
+What is the average of total commissions to total sales ratio for each affiliate network based on stores with high volume transactions (more than 10 transactions)?,COUPON_PLATFORM,"SELECT AFFILIATENETWORKID, AVG(COMMISSIONVALUE/ORDERTOTAL) as AVG_COMMISSION_TO_TOTAL_SALES_RATIO
+FROM TRANSACTIONS
+WHERE PROGRAM = 'High Volume'
+GROUP BY AFFILIATENETWORKID
+HAVING COUNT(ID) > 10;"
+What is the total commission for each partner in the transactions database?,COUPON_PLATFORM,"SELECT PARTNERID, SUM(COMMISSIONVALUE) as TotalCommission
+FROM TRANSACTIONS
+GROUP BY PARTNERID;"
+Can you find the sum of commission values for each unique partner ID in our transactions records?,COUPON_PLATFORM,"SELECT PARTNERID, SUM(COMMISSIONVALUE) as TotalCommission
+FROM TRANSACTIONS
+GROUP BY PARTNERID;"
+What is the total commission value for each coupon code used in each store?,COUPON_PLATFORM,AVG(COMMISSIONVALUE)
+Can you provide a breakdown of the total commissions earned from each specific coupon from each store?,COUPON_PLATFORM,"SELECT STOREID, COUPONID, SUM(COMMISSIONVALUE) AS TotalCommissions
+FROM TRANSACTIONS
+WHERE CURRENCY = 'USD'
+GROUP BY STOREID, COUPONID;"
+What is the total commission amount for each partner in the affiliate network?,COUPON_PLATFORM,COMMISSION_AMOUNT = TRANSACTIONS.COMMISSIONVALUE * TRANSACTIONS.CURRENCY_FLOAT
+Can you provide a list of partner sales IDs along with their corresponding total commission values from the transactions?,COUPON_PLATFORM,"SELECT PARTNERSALEID, SUM(COMMISSIONVALUE) as TotalCommission
+FROM TRANSACTIONS
+GROUP BY PARTNERSALEID;"
+What is the average commission value for each payment type where those payment types have been used more than 5 times?,COUPON_PLATFORM,"SELECT paymenttype, AVG(commissionvalue) as average_commission
+FROM transactions
+GROUP BY paymenttype
+HAVING COUNT(paymenttype) > 5;"
+"What is the average commission for different payment methods, considering only those methods that have been used more than five times?",COUPON_PLATFORM,"SELECT PAYMENTTYPE, AVG(COMMISSIONVALUE) as Average_Commission
+FROM TRANSACTIONS
+GROUP BY PAYMENTTYPE
+HAVING COUNT(PAYMENTTYPE) > 5;"
+What is the average savings per category in stores with more than 5 instances?,COUPON_PLATFORM,"SELECT AVG(Stores.AVERAGESAVINGS) as Average_Savings
+FROM Stores
+WHERE Stores.ID IN (
+    SELECT Stores.ID
+    FROM Stores
+    GROUP BY Stores.CATEGORYID
+    HAVING COUNT(Stores.ID) > 5
+);"
+What is the average of the average savings grouped by category for categories that appear more than 5 times?,COUPON_PLATFORM,"SELECT AVG(AVG_SAVINGS) as Average_Average_Savings
+FROM (
+    SELECT CATEGORYID, AVG(SAVINGS) as AVG_SAVINGS
+    FROM STORES
+    GROUP BY CATEGORYID
+    HAVING COUNT(*) > 5
+)"
+What is the average share of banner clicks for each coupon that has been clicked on more than three times?,COUPON_PLATFORM,"SELECT AVG(B.CLICKS) as Average_Banner_Clicks
+FROM (
+    SELECT COUPONID, COUNT(*) as CLICKS
+    FROM EVENTS
+    WHERE EVENTNAME = 'click'
+    GROUP BY COUPONID
+    HAVING COUNT(*) > 3
+) as B;"
+Can you provide the average percentage of times a banner was clicked for each coupon with more than three total clicks?,COUPON_PLATFORM,"SELECT COUPONID, AVG(CASE WHEN ISBANNER = TRUE THEN 1 ELSE 0 END) AS AVG_BANNER_CLICKED
+FROM NEWSCLICKS
+GROUP BY COUPONID
+HAVING COUNT(COUPONID) > 3;"
+What is the average share of spam reports from each origin which have more than three records in the newsletters?,COUPON_PLATFORM,"SELECT 
+    ORIGIN, 
+    COUNT(*) AS Total, 
+    SUM(HASREPORTEDSPAM) AS SpamReports, 
+    SUM(HASREPORTEDSPAM) / COUNT(*) AS SpamShare
+FROM 
+    NEWSLETTERS
+WHERE 
+    HASREPORTEDSPAM = 1
+GROUP BY 
+    ORIGIN
+HAVING 
+    COUNT(*) > 3;"
+What is the average proportion of spam reports for each source that has more than three entries in the newsletters?,COUPON_PLATFORM,"SELECT 
+    NEWSLETTERS.ORIGIN,
+    COUNT(*) AS Total,
+    (COUNT(*) * 1.0 / (SELECT COUNT(*) FROM NEWSLETTERS)) AS Proportion
+FROM 
+    NEWSLETTERS
+GROUP BY 
+    NEWSLETTERS.ORIGIN
+HAVING 
+    COUNT(*) > 3;"
+"What is the total commission value and the number of transactions per each cohort of newsletters (divided by year and quarter), considering the number of clicks each newsletter has received?",COUPON_PLATFORM,"SELECT
+    EXTRACT(YEAR FROM n.SUBSCRIBEDATE) AS cohort_year,
+    EXTRACT(QUARTER FROM n.SUBSCRIBEDATE) AS cohort_quarter,
+    SUM(t.COMMISSIONVALUE) AS total_commission_value,
+    COUNT(DISTINCT t.ID) AS transaction_count,
+    COUNT(DISTINCT nc.ID) AS total_clicks
+FROM
+    NEWSLETTERS n
+LEFT JOIN
+    TRANSACTIONS t ON n.USERID = t.USERID
+LEFT JOIN
+    NEWSCLICKS nc ON n.ID = nc.NEWSLETTERID
+GROUP BY
+    cohort_year,
+    cohort_quarter;"
+"Can you provide an analysis of the performance of our newsletters, segmented by cohort year and quarter, detailing the number of transactions and total commission value, along with the number of clicks each newsletter has received?",COUPON_PLATFORM,"SELECT
+    EXTRACT(YEAR FROM n.SUBSCRIBEDATE) AS cohort_year,
+    EXTRACT(QUARTER FROM n.SUBSCRIBEDATE) AS cohort_quarter,
+    COUNT(DISTINCT t.ID) AS transaction_count,
+    SUM(t.COMMISSIONVALUE) AS total_commission_value,
+    COUNT(DISTINCT nc.ID) AS total_clicks
+FROM
+    NEWSLETTERS n
+LEFT JOIN
+    TRANSACTIONS t ON n.USERID = t.USERID
+LEFT JOIN
+    NEWSCLICKS nc ON n.ID = nc.NEWSLETTERID
+GROUP BY
+    cohort_year,
+    cohort_quarter;"
+How many times has each newsletter been viewed and clicked on?,COUPON_PLATFORM,"SELECT
+    n.ID AS newsletter_id,
+    COUNT(DISTINCT nv.ID) AS view_count,
+    COUNT(DISTINCT nc.ID) AS click_count
+FROM
+    NEWSLETTERS n
+LEFT JOIN
+    NEWSVIEWS nv ON n.ID = nv.NEWSLETTERID
+LEFT JOIN
+    NEWSCLICKS nc ON n.ID = nc.NEWSLETTERID
+GROUP BY
+    n.ID;"
+What is the view and click count for each individual newsletter?,COUPON_PLATFORM,"SELECT NEWSLETTERS.ID, NEWSLETTERS.EMAIL, COUNT(NEWSVIEWS.ID) AS VIEWS, COUNT(NEWSCLICKS.ID) AS CLICKS
+FROM NEWSLETTERS
+LEFT JOIN NEWSVIEWS ON NEWSLETTERS.ID = NEWSVIEWS.NEWSLETTERID
+LEFT JOIN NEWSCLICKS ON NEWSLETTERS.ID = NEWSCLICKS.NEWSLETTERID
+GROUP BY NEWSLETTERS.ID, NEWSLETTERS.EMAIL;"
+What are the categories of stores that have an average rating of over 4.5 with more than 5 ratings?,COUPON_PLATFORM,"SELECT STOREID, AVERAGESAVINGS, CATEGORYID
+FROM STORES
+WHERE AVERAGESAVINGS > 4.5 AND RATING > 5;"
+Which store categories have a high average rating (above 4.5) and have been rated more than 5 times?,COUPON_PLATFORM,"SELECT STOREID, CATEGORYID, AVERAGESAVINGS
+FROM STORES
+WHERE AVERAGESAVINGS > 4.5 AND RATING > 5;"
+"How many stores are associated with each affiliate program, including those not associated with any affiliate network?",COUPON_PLATFORM,"SELECT 
+    AFFILIATENETWORKID, 
+    COUNT(DISTINCT STOREID) AS StoresAssociated, 
+    COUNT(STOREID) AS TotalStores
+FROM 
+    AFFILIATE_PROGRAM_STORES
+GROUP BY 
+    AFFILIATENETWORKID;"
+"What is the count of stores per affiliate program, while considering the stores that are not part of any affiliate network as a separate group?",COUPON_PLATFORM,"SELECT STORES.ID, STORES.NAME, COUNT(TRANSACTIONS.ID) as transaction_count
+FROM STORES
+LEFT JOIN TRANSACTIONS ON STORES.ID = TRANSACTIONS.STOREID
+WHERE STORES.AFFILIATENETWORKID IS NULL
+GROUP BY STORES.ID, STORES.NAME;"
+What is the percentage of invalid coupon codes per affiliate program?,COUPON_PLATFORM,"SELECT (SUM(CASE WHEN CODE NOT LIKE '%invalid%' THEN 1 ELSE 0 END) * 100.0 / COUNT(*)) AS percentage_invalid
+FROM AFFILIATE_PROGRAM_STORES
+WHERE AFFILIATENETWORKID = (SELECT ID FROM AFFILIATE_NETWORKS WHERE NAME = 'Affiliate Network 1');"
+What is the proportion of coupon codes that are not valid for each affiliate program?,COUPON_PLATFORM,"SELECT AFFILIATENETWORKID, COUNT(*) / (SELECT COUNT(*) FROM STORES) AS PROPORTION
+FROM COUPONS
+WHERE CODE IS NOT NULL AND CODE <> ''
+GROUP BY AFFILIATENETWORKID;"
+What is the month-over-month percentage change in total commission values for each month and year?,COUPON_PLATFORM,"WITH monthly_commissions AS (
+    SELECT 
+        EXTRACT(YEAR FROM transaction_date) AS year,
+        EXTRACT(MONTH FROM transaction_date) AS month,
+        SUM(commission_value) AS total_commission
+    FROM 
+        transactions
+    GROUP BY 
+        year, 
+        month
+),
+monthly_changes AS (
+    SELECT 
+        year, 
+        month, 
+        total_commission,
+        LAG(total_commission) OVER (PARTITION BY year ORDER BY month) AS previous_month_commission
+    FROM 
+        monthly_commissions
+)
+SELECT 
+    year, 
+    month, 
+    (total_commission - previous_month_commission) / previous_month_commission * 100 AS monthly_percentage_change
+FROM 
+    monthly_changes;"
+How has the total commission value varied from month to month in terms of percentage change?,COUPON_PLATFORM,"SELECT 
+    (((commission_value_current_month - commission_value_previous_month) / commission_value_previous_month) * 100) AS percentage_change
+FROM 
+    (SELECT 
+        SUM(commission_value) AS commission_value_current_month,
+        LAG(SUM(commission_value)) OVER (ORDER BY transaction_date) AS commission_value_previous_month
+    FROM 
+        transactions
+    WHERE 
+        YEAR(transaction_date) = YEAR(CURRENT_DATE) - 1
+    GROUP BY 
+        MONTH(transaction_date)) AS subquery;"
+"Can you provide a list of all the stores in our database that have 'eco-friendly' mentioned in their name, regardless of case sensitivity?",COUPON_PLATFORM,"SELECT STORES.NAME
+FROM STORES
+WHERE LOWER(STORES.NAME) LIKE '%eco-friendly%';"
+"Can you identify all our stores that include the term 'eco-friendly' in their name, without considering case sensitivity?",COUPON_PLATFORM,SELECT * FROM STORES WHERE NAME LIKE '%eco-friendly%' AND NAME COLLATE NOCASE LIKE '%eco-friendly%';
+"Can you provide a list of all stores that have ""Los Angeles"" in their name, regardless of case sensitivity?",COUPON_PLATFORM,SELECT * FROM STORES WHERE LOWER(NAME) LIKE '%los angeles%' OR LOWER(NAME) LIKE '%los angeles%';
+"Can you show me all the data for stores whose names include the phrase ""Los Angeles"", not considering the case of the letters?",COUPON_PLATFORM,"SELECT
+    *
+FROM
+    STORES
+WHERE
+    LOWER(NAME) LIKE '%los angeles%';"
+"Can you provide me with all the details of the coupons that have the word 'christmas' in their title, irrespective of the case?",COUPON_PLATFORM,SELECT * FROM COUPONS WHERE TITLE LIKE '%christmas%';
+"Can you give me information on all coupons where the title contains 'christmas', considering both upper and lower cases?",COUPON_PLATFORM,SELECT * FROM COUPONS WHERE UPPER(TITLE) LIKE '%CHRISTMAS%' OR UPPER(TITLE) LIKE '%CHRISTMAS%';
+"What are the yearly and quarterly sums of commissions above 100,000 in the transaction records?",COUPON_PLATFORM,"SELECT SUM(COMMISSIONVALUE) as TotalCommission,
+       DATEPART(YEAR, TRANSACTIONDATE) as Year,
+       DATEPART(QUARTER, TRANSACTIONDATE) as Quarter
+FROM TRANSACTIONS
+WHERE COMMISSIONVALUE > 100000
+GROUP BY DATEPART(YEAR, TRANSACTIONDATE), DATEPART(QUARTER, TRANSACTIONDATE);"
+"Can you provide a breakdown of total commission values exceeding 100,000 by year and quarter from our transaction data?",COUPON_PLATFORM,"SELECT 
+    EXTRACT(YEAR FROM TRANSACTIONDATE) AS Year,
+    EXTRACT(QUARTER FROM TRANSACTIONDATE) AS Quarter,
+    COUNT(*) AS Transactions_Count
+FROM 
+    TRANSACTIONS
+WHERE 
+    COMMISSIONVALUE > 100000
+GROUP BY 
+    Year, Quarter
+ORDER BY 
+    Year, Quarter;"
+What is the average discount amount per order across different store categories?,COUPON_PLATFORM,"SELECT AVG(DISCOUNTAMOUNT) as Average_Discount_Per_Order
+FROM TRANSACTIONS;"
+What is the mean value of total discounts applied on orders for each category in our stores?,COUPON_PLATFORM,"SELECT 
+    STORE_ID, 
+    AVG(TOTAL_DISCOUNT) as AVG_DISCOUNT
+FROM 
+    ORDERS
+GROUP BY 
+    STORE_ID;"
+"What is the total inventory cost for each category ID, where the inventory cost is calculated by multiplying the order total with the commission value for each transaction?",COUPON_PLATFORM,"SELECT CATEGORYID, SUM(ORDERTOTAL * COMMISSIONVALUE) AS TOTAL_INVENTORY_COST
+FROM TRANSACTIONS
+GROUP BY CATEGORYID;"
+"Can you provide the sum of the product of order total and commission value, grouped by each category ID, from our transaction records?",COUPON_PLATFORM,"SELECT PRODUCTID, SUM(ORDERTOTAL * COMMISSIONVALUE) as TotalCommission
+FROM TRANSACTIONS
+GROUP BY PRODUCTID;"
+What is the total value of inventory for each category based on average savings and total order?,COUPON_PLATFORM,"SELECT STORES.CATEGORYID, AVG(STORES.AVERAGESAVINGS) AS Average_Savings, SUM(TRANSACTIONS.ORDERTOTAL) AS Total_Order
+FROM STORES
+JOIN TRANSACTIONS ON STORES.ID = TRANSACTIONS.STOREID
+GROUP BY STORES.CATEGORYID;"
+"What is the cumulative inventory value, calculated by multiplying the order total with the average savings, for each product category in the store?",COUPON_PLATFORM,"SELECT 
+    S.ID, 
+    S.NAME, 
+    SUM(T.ORDERTOTAL * APS.AVERAGESAVINGS) AS CUMULATIVE_INVENTORY_VALUE
+FROM 
+    STORES S
+JOIN 
+    TRANSACTIONS T ON S.ID = T.STOREID
+JOIN 
+    AFFILIATE_PROGRAM_STORES APS ON S.AFFILIATENETWORKID = APS.AFFILIATE_NETWORK_ID
+GROUP BY 
+    S.ID, 
+    S.NAME;"
+"What is the average rating of the most popular coupons, categorized by store type, where popularity is determined by having more than 10 votes?",COUPON_PLATFORM,"SELECT STORES.CATEGORYID, AVG(COUPONS.RATING) as AverageRating
+FROM COUPONS
+JOIN STORES ON COUPONS.STOREID = STORES.ID
+GROUP BY STORES.CATEGORYID
+HAVING COUNT(COUPONS.ID) > 10 AND STORES.ISPOPULAR = TRUE;"
+"What is the average upvote ratio for each category of stores, only considering coupons that have more than 10 votes?",COUPON_PLATFORM,"SELECT STOREID, AVG(VOTESUP/VOTESDOWN) as Average_Upvote_Ratio
+FROM COUPONS
+WHERE VOTESUP > 10 AND VOTESDOWN > 10
+GROUP BY STOREID;"
+"What is the total sales amount for each coupon, categorized by store category?",COUPON_PLATFORM,"SELECT STORES.CATEGORYID, SUM(COUPONS.AMOUNT) AS TOTAL_SALES"
+"Can you provide a breakdown of total sales per coupon, grouped by store category?",COUPON_PLATFORM,"SELECT
+    s.CATEGORYID,
+    c.ID AS coupon_id,
+    SUM(t.ORDERTOTAL) AS total_sales
+FROM
+    TRANSACTIONS t
+JOIN
+    COUPONS c ON t.COUPONID = c.ID
+JOIN
+    STORES s ON c.STOREID = s.ID
+GROUP BY
+    s.CATEGORYID, c.ID;"
+What are the total order amounts for each store category where the category has more than 5 transactions?,COUPON_PLATFORM,"COMMAND: SELECT STOREID, SUM(ORDERTOTAL) as TotalOrderAmount
+FROM TRANSACTIONS
+GROUP BY STOREID
+HAVING COUNT(ID) > 5;"
+What are the aggregate order totals for each store category that has processed more than 5 transactions?,COUPON_PLATFORM,"SELECT STOREID, CATEGORYID, COUNT(*) AS TOTAL_TRANSACTIONS
+FROM TRANSACTIONS
+GROUP BY STOREID, CATEGORYID
+HAVING COUNT(*) > 5;"
+"What is the average age of each cohort of newsletter subscribers, the number of subscribers in each cohort, the number of transactions made by each cohort, and the total commissions generated by each cohort, segmented quarterly?",COUPON_PLATFORM,"SELECT cohort, AVG(age) as average_age
+FROM newsletter_subscribers
+GROUP BY cohort;"
+"What is the quarterly breakdown of the average age of our newsletter subscribers, the size of each subscriber cohort, the transaction count, and the total commissions generated by each cohort?",COUPON_PLATFORM,SELECT * FROM COUPONS
+"What is the number of stores for each affiliate network including those not associated with any affiliate networks?  Mark such stores as ""no network""",COUPON_PLATFORM,"SELECT COUNT(*) as total_stores,
+       CASE
+           WHEN AFFILIATENETWORKID IS NULL THEN 'No Network'
+           ELSE CONCAT('Network ', AFFILIATENETWORKID)
+       END as affiliate_network
+FROM STORES
+GROUP BY affiliate_network;"
+"Can you provide the count of all stores grouped by their affiliate networks, including those without a designated network? Mark such stores as ""no network""",COUPON_PLATFORM,"SELECT AFFILIATENETWORKID, COUNT(*) as StoreCount,
+CASE 
+    WHEN AFFILIATENETWORKID IS NULL THEN 'No Network'
+    ELSE 'With Network'
+END as NetworkStatus
+FROM STORES
+GROUP BY AFFILIATENETWORKID;"
+"What is the total commission value for each product, considering transactions with null commission values as zero?",COUPON_PLATFORM,"SELECT PROGRAM, SUM(COUPONID) as Total_Coupons, SUM(COMMISSIONVALUE) as Total_Commission
+FROM TRANSACTIONS
+WHERE COMMISSIONVALUE IS NOT NULL
+GROUP BY PROGRAM;"
+"What is the sum of commission values for each product, treating transactions with no recorded commission as having a commission value of zero?",COUPON_PLATFORM,"SELECT
+    EXTRACT(YEAR FROM n.SUBSCRIBEDATE) AS cohort_year,
+    EXTRACT(QUARTER FROM n.SUBSCRIBEDATE) AS cohort_quarter,
+    AVG(DATEDIFF(year, n.BIRTHDATE, CURRENT_DATE)) AS average_age,
+    COUNT(DISTINCT n.ID) AS subscriber_count,
+    COUNT(DISTINCT t.ID) AS transaction_count,
+    SUM(t.COMMISSIONVALUE) AS total_commissions
+FROM
+    NEWSLETTERS n
+LEFT JOIN
+    TRANSACTIONS t ON n.USERID = t.USERID
+GROUP BY
+    cohort_year,
+    cohort_quarter;"
+"What is the total inventory cost for each category ID, considering the product of order total and commission value for each transaction, and treating missing values as zeroes?",COUPON_PLATFORM,"SELECT STORES.CATEGORYID, SUM(TRANSACTIONS.ORDERTOTAL * TRANSACTIONS.COMMISSIONVALUE) AS TOTAL_COST
+FROM TRANSACTIONS
+LEFT JOIN STORES ON TRANSACTIONS.PROGRAM = STORES.PROGRAM
+GROUP BY STORES.CATEGORYID;"
+What is the sum of the product of order total and commission value (with NULL values considered as zero) for each category in the store?,COUPON_PLATFORM,"SELECT CATEGORYID, SUM(ORDERTOTAL * COALESCE(COMMISSIONVALUE, 0)) AS TotalCommission
+FROM TRANSACTIONS
+GROUP BY CATEGORYID;"
+"How many coupons are available in each store, including a category for those without a specified store? Mark this as ""no store""",COUPON_PLATFORM,"SELECT STORES.SLUG, COUNT(COUPONS.ID) AS Coupons_Count
+FROM STORES
+LEFT JOIN COUPONS ON STORES.ID = COUPONS.STOREID
+GROUP BY STORES.SLUG;"
+"What is the distribution of coupons across all the stores, with a separate count for those without associated stores? Mark this as ""no store""",COUPON_PLATFORM,"SELECT 
+    CASE 
+        WHEN STORES.ID IS NULL THEN 'No Store'
+        ELSE STORES.ID
+    END AS StoreID,
+    COUNT(COUPONS.ID) AS CouponCount,
+    COUNT(CASE WHEN STORES.ID IS NULL THEN 1 END) AS NoStoreCouponCount
+FROM 
+    COUPONS
+LEFT JOIN 
+    STORES ON COUPONS.STOREID = STORES.ID
+GROUP BY 
+    CASE 
+        WHEN STORES.ID IS NULL THEN 'No Store'
+        ELSE STORES.ID
+    END;"
+"What are the counts of clicks for each newsletter origin, including those with an unknown origin? Mark this category ""unknown origin""",COUPON_PLATFORM,"SELECT NEWSLETTERS.ORIGIN, COUNT(NEWSVIEWS.ID) AS CLICKS
+FROM NEWSLETTERS
+LEFT JOIN NEWSVIEWS ON NEWSLETTERS.ID = NEWSVIEWS.NEWSLETTERID
+GROUP BY NEWSLETTERS.ORIGIN;"
+"How many clicks  are there for each newsletter origin, including for an unknown origin, in our newsletters database? Mark uknown origin ""unknown""",COUPON_PLATFORM,"SELECT ORIGIN, COUNT(*) as CLICKS
+FROM NEWSLETTERS
+WHERE ORIGIN = 'unknown' OR ORIGIN IS NULL
+GROUP BY ORIGIN;"
+Can you calculate the percentage change in total commissions from the previous month for each month?,COUPON_PLATFORM,"SELECT 
+    MONTH,
+    SUM(COMMISSIONS) AS TOTAL_COMMISSIONS,
+    SUM(COMMISSIONS) / LAG(SUM(COMMISSIONS)) OVER (ORDER BY MONTH) * 100 AS PERCENTAGE_CHANGE
+FROM 
+    YOUR_TABLE_NAME
+GROUP BY 
+    MONTH
+ORDER BY 
+    MONTH;"
+What is the month-on-month percentage growth rate of newsletter subscriptions?,COUPON_PLATFORM,"SELECT 
+    (SUM(CASE WHEN EXTRACT(MONTH FROM LASTUPDATE) = EXTRACT(MONTH FROM CURRENT_DATE) THEN 1 ELSE 0 END) / COUNT(*) * 100) AS growth_rate
+FROM 
+    NEWSLETTERS;"
+How has the monthly percentage growth rate of our newsletter subscriptions changed over time?,COUPON_PLATFORM,"SELECT 
+    (SUM(CASE WHEN EXTRACT(MONTH FROM LASTUPDATE) = EXTRACT(MONTH FROM CURRENT_DATE) AND EXTRACT(YEAR FROM LASTUPDATE) = EXTRACT(YEAR FROM CURRENT_DATE) THEN 1 ELSE 0 END) / COUNT(*) * 100) AS growth_rate
+FROM 
+    NEWSLETTERS;"
+"What is the month-over-month percentage change in total commissions for each coupon used in transactions, sorted by year and month?",COUPON_PLATFORM,"WITH monthly_commissions AS (
+    SELECT
+        COUPONID,
+        EXTRACT(YEAR FROM TRANSACTIONDATE) AS year,
+        EXTRACT(MONTH FROM TRANSACTIONDATE) AS month,
+        SUM(COMMISSIONVALUE) AS total_commission
+    FROM
+        TRANSACTIONS
+    WHERE
+        COUPONID IS NOT NULL
+    GROUP BY
+        COUPONID, year, month
+),
+commissions_with_lag AS (
+    SELECT
+        mc.*,
+        LAG(mc.total_commission) OVER (PARTITION BY mc.COUPONID ORDER BY mc.year, mc.month) AS prev_total_commission
+    FROM
+        monthly_commissions mc
+)
+SELECT
+    COUPONID,
+    year,
+    month,
+    total_commission,
+    ROUND(((total_commission - prev_total_commission) / NULLIF(prev_total_commission, 0)) * 100, 2) AS pct_change
+FROM
+    commissions_with_lag
+ORDER BY
+    COUPONID, year, month;"
+"How did the total commissions earned from each coupon in transactions change in terms of percentages on a monthly basis, ordered by year and month?",COUPON_PLATFORM,"SELECT 
+    EXTRACT(YEAR FROM TRANSACTIONDATE) AS YEAR,
+    EXTRACT(MONTH FROM TRANSACTIONDATE) AS MONTH,
+    SUM(COMMISSIONVALUE) AS TOTAL_COMMISSION,
+    SUM(COMMISSIONVALUE) * 100.0 / SUM(SUM(COMMISSIONVALUE)) OVER (PARTITION BY EXTRACT(YEAR FROM TRANSACTIONDATE), EXTRACT(MONTH FROM TRANSACTIONDATE)) AS PERCENTAGE
+FROM 
+    TRANSACTIONS
+GROUP BY 
+    YEAR, MONTH
+ORDER BY 
+    YEAR, MONTH;"
+"Can you provide me with all the newsletters that were originated from Los Angeles, regardless of case sensitivity in the origin's name?",COUPON_PLATFORM,"SELECT *
+FROM NEWSLETTERS
+WHERE ORIGIN LIKE '%Los Angeles%';"
+"Could you find all records in the newsletters database where the origin contains the term ""Los Angeles"", irrespective of the case in which it's written?",COUPON_PLATFORM,SELECT * FROM NEWSLETTERS WHERE ORIGIN LIKE '%Los Angeles%';
+"Can you provide a list of all the coupons related to Christmas, irrespective of case sensitivity in the title?",COUPON_PLATFORM,"SELECT CODE FROM COUPONS WHERE CODE LIKE '%CHRISTMAS%' OR CODE LIKE '%christmas%' OR COUPONID LIKE '%CHRISTMAS%' OR COUPONID LIKE '%christmas%';
+"
+"Can you show all the entries in the coupons database that include the word 'Christmas' in the title, without considering case sensitivity?",COUPON_PLATFORM,SELECT * FROM coupons WHERE title LIKE '%Christmas%';
+What are the user actions within one hour of their login time for each user?,COUPON_PLATFORM,"SELECT
+    ua.USER_ID,
+    ul.LOGIN_TIME,
+    ua.ACTION_TIME,
+    ua.ACTION
+FROM
+    USER_LOGINS ul
+JOIN
+    USER_ACTIONS ua ON ua.USER_ID = ul.USER_ID
+WHERE
+    ua.ACTION_TIME BETWEEN ul.LOGIN_TIME AND DATEADD(hour, 1, ul.LOGIN_TIME);"
+Can you provide the actions performed by each user within an hour of their login time?,COUPON_PLATFORM,"SELECT
+    ua.USER_ID,
+    ul.LOGIN_TIME,
+    ua.ACTION_TIME,
+    ua.ACTION
+FROM
+    USER_LOGINS ul
+JOIN
+    USER_ACTIONS ua ON ua.USER_ID = ul.USER_ID
+WHERE
+    ua.ACTION_TIME BETWEEN ul.LOGIN_TIME AND DATEADD(hour, 1, ul.LOGIN_TIME);"
+"What is the month-over-month growth rate in total sales for each product, broken down by year and month?",COUPON_PLATFORM,"SELECT STATUS, COUNT(*) as transaction_count
+FROM TRANSACTIONS
+GROUP BY STATUS;"
+"How did each product's total sales change from one month to the next, expressed as a percentage, for each year and month?",COUPON_PLATFORM,"WITH product_sales AS (
+    SELECT
+        ol.PRODUCT_ID,
+        EXTRACT(YEAR FROM o.ORDER_TIMESTAMP) AS year,
+        EXTRACT(MONTH FROM o.ORDER_TIMESTAMP) AS month,
+        SUM(ol.PRICE * ol.QUANTITY) AS total_sales
+    FROM
+        ORDER_LINES ol
+    JOIN
+        ORDERS o ON ol.ORDER_ID = o.ORDER_ID
+    GROUP BY
+        ol.PRODUCT_ID, year, month
+),
+sales_with_lag AS (
+    SELECT
+        ps.*,
+        LAG(ps.total_sales) OVER (PARTITION BY ps.PRODUCT_ID ORDER BY ps.year, ps.month) AS prev_total_sales
+    FROM
+        product_sales ps
+)
+SELECT
+    PRODUCT_ID,
+    year,
+    month,
+    total_sales,
+    ROUND(((total_sales - prev_total_sales) / NULLIF(prev_total_sales, 0)) * 100, 2) AS pct_change
+FROM
+    sales_with_lag;"
+What is the average order amount for each channel based on the newsletters?,COUPON_PLATFORM,"SELECT CHANNEL, AVG(ORDERTOTAL) as AverageOrderAmount
+FROM NEWSLETTERS
+JOIN TRANSACTIONS ON NEWSLETTERS.ID = TRANSACTIONS.NEWSLETTERID
+GROUP BY CHANNEL;"
+What is the average transaction value per channel for users who received newsletters?,COUPON_PLATFORM,"SELECT CAMPAIGN, AVG(COMMISSIONVALUE) as Average_Transaction_Value
+FROM TRANSACTIONS
+WHERE USERID IN (SELECT ID FROM NEWSLETTERS WHERE ISPOPULAR = TRUE)
+GROUP BY CAMPAIGN;"
+"What is the total inventory value for each category id, calculated by multiplying the coupon type with average savings?",COUPON_PLATFORM,"SELECT
+    p.CATEGORY_ID,
+    SUM(COALESCE(i.QUANTITY, 0) * COALESCE(c.COUPONTYPE, 0) * COALESCE(c.AVERAGESAVINGS, 0)) AS total_inventory_value
+FROM
+    PRODUCTS p
+LEFT JOIN
+    INVENTORY i ON p.ID = i.PRODUCT_ID
+LEFT JOIN
+    COUPONS c ON p.ID = c.PRODUCTID
+GROUP BY
+    p.CATEGORY_ID;"
+"Can you provide the total inventory value per category, where value is the product of coupon type and average savings?",COUPON_PLATFORM,"SELECT
+    p.CATEGORY_ID,
+    SUM(COALESCE(i.QUANTITY, 0) * COALESCE(c.COUPONTYPE, 0) * COALESCE(c.AVERAGESAVINGS, 0)) AS total_inventory_value
+FROM
+    PRODUCTS p
+LEFT JOIN
+    INVENTORY i ON p.ID = i.PRODUCT_ID
+LEFT JOIN
+    COUPONS c ON p.ID = c.PRODUCTID
+GROUP BY
+    p.CATEGORY_ID;"
+What is the total commission value for each affiliate network?,COUPON_PLATFORM,"SELECT
+    AFFILIATENETWORKID,
+    SUM(COMMISSIONVALUE) AS total_commission_value
+FROM
+    TRANSACTIONS
+GROUP BY
+    AFFILIATENETWORKID;"
+Can you provide the sum of commission value for each affiliate network?,COUPON_PLATFORM,"SELECT
+    AFFILIATENETWORKID,
+    SUM(COMMISSIONVALUE) AS total_commission_value
+FROM
+    TRANSACTIONS
+GROUP BY
+    AFFILIATENETWORKID;"
+What is the total inventory value in each product category based on average savings and total orders?,COUPON_PLATFORM,"SELECT STORES.CATEGORYID, SUM(STORES.AVERAGESAVINGS * TRANSACTIONS.ORDERTOTAL) as TotalInventoryValue
+FROM STORES
+JOIN TRANSACTIONS ON STORES.ID = TRANSACTIONS.STOREID
+GROUP BY STORES.CATEGORYID;"
+What is the sum of the product of order total and average savings grouped by category ID?,COUPON_PLATFORM,"SELECT CATEGORYID, SUM(ORDERTOTAL * AVERAGESAVINGS) AS TotalSavings
+FROM TRANSACTIONS
+GROUP BY CATEGORYID;"
+What is the average active status for each newsletter that has more than 5 areas of interest?,COUPON_PLATFORM,"SELECT NEWSLETTERS.ID, AVG(NEWSLETTER_AREAS_OF_INTEREST.ACTIVESTATUS) AS AVG_ACTIVE_STATUS
+FROM NEWSLETTERS
+JOIN NEWSLETTER_AREAS_OF_INTEREST ON NEWSLETTERS.ID = NEWSLETTER_AREAS_OF_INTEREST.NEWSLETTERID
+GROUP BY NEWSLETTERS.ID
+HAVING COUNT(NEWSLETTER_AREAS_OF_INTEREST.ID) > 5;"
+Can you provide the average active status of newsletters that have been associated with more than 5 areas of interest?,COUPON_PLATFORM,"SELECT AVG(ISOPTIN) as Average_Active_Status
+FROM NEWSLETTER_AREAS_OF_INTEREST
+WHERE NEWSLETTERID IN (
+    SELECT NEWSLETTERID
+    FROM NEWSLETTER_AREAS_OF_INTEREST
+    GROUP BY NEWSLETTERID
+    HAVING COUNT(*) > 5
+);"
+What is the average rating and average savings for each category of stores?,COUPON_PLATFORM,"SELECT 
+    STORES.CATEGORYID, 
+    AVG(STORES.RATING) AS AverageRating, 
+    AVG(STORES.AVERAGESAVINGS) AS AverageSavings
+FROM 
+    STORES
+GROUP BY 
+    STORES.CATEGORYID;"
+What is the average savings and average rating of each category in our store database?,COUPON_PLATFORM,"SELECT AVG(AVERAGESAVINGS) AS Average_Savings, AVG(RATING) AS Average_Rating
+FROM STORES;"
+"What is the number of stores associated with each affiliate network, including those without any affiliation? Mark these ""no network""",COUPON_PLATFORM,"SELECT AFFILIATENETWORKID, COUNT(*) as store_count
+FROM STORES
+WHERE AFFILIATENETWORKID IS NOT NULL
+GROUP BY AFFILIATENETWORKID
+UNION ALL
+SELECT NULL as AFFILIATENETWORKID, COUNT(*) as store_count
+FROM STORES
+WHERE AFFILIATENETWORKID IS NULL"
+"Can you provide the count of stores for each affiliate network, with a special category for stores that are not part of any affiliate network?  Mark these ""no network""",COUPON_PLATFORM,"SELECT AFFILIATENETWORKID, COUNT(*) as store_count
+FROM STORES
+GROUP BY AFFILIATENETWORKID;"
+What is the percentage of transactions per category that have an available commission?,COUPON_PLATFORM,"SELECT (SUM(CASE WHEN COMMISSIONVALUE > 0 THEN 1 ELSE 0 END) * 100.0 / COUNT(*) ) AS percentage_commissioned
+FROM TRANSACTIONS
+WHERE PROGRAM = 'valid_program';"
+What proportion of transactions in each store category have a commission value greater than zero?,COUPON_PLATFORM,"SELECT COUNT(*) 
+FROM TRANSACTIONS 
+WHERE COMMISSIONVALUE > 0;"
+"What is the total commission value for each product, considering transactions where the commission value is not specified as zero?",COUPON_PLATFORM,"SELECT PROGRAM, SUM(COUPONID) as Total_Coupons
+FROM TRANSACTIONS
+WHERE COMMISSIONVALUE != 0
+GROUP BY PROGRAM;"
+"Can you provide the total sales for each product, assuming cases where the commission value is missing should be treated as zero?",COUPON_PLATFORM,"SELECT STORES.PRODUCTID, SUM(TRANSACTIONS.ORDERTOTAL) AS TotalSales
+FROM TRANSACTIONS
+LEFT JOIN STORES ON TRANSACTIONS.PRODUCTID = STORES.ID
+GROUP BY STORES.PRODUCTID;"
+"What is the total order amount for each product, considering that some orders may not have a total?",COUPON_PLATFORM,"SELECT PRODUCTID, SUM(ORDERTOTAL) as TotalOrderAmount
+FROM TRANSACTIONS
+GROUP BY PRODUCTID;"
+"What is the accumulated order amount for each product, taking into account that some orders might not have a recorded total?",COUPON_PLATFORM,"SELECT PRODUCTID, SUM(ORDERTOTAL) as TotalOrderAmount
+FROM TRANSACTIONS
+GROUP BY PRODUCTID;"
+"What is the total inventory cost for each product category, ensuring that NULL values are handled and don't affect the final result?",COUPON_PLATFORM,"SELECT PRODUCTID, SUM(INVENTORYCOST) AS TOTAL_INVENTORY_COST
+FROM PRODUCTS
+WHERE PRODUCTID IS NOT NULL AND INVENTORYCOST IS NOT NULL
+GROUP BY PRODUCTID;"
+"What is the sum of the product of order total and average savings for each category, taking into account that some entries may not have a recorded order total or average savings?",COUPON_PLATFORM,"SELECT
+    pc.CATEGORY_NAME,
+    SUM(COALESCE(o.ORDERTOTAL, 0) * COALESCE(p.AVERAGESAVINGS, 0)) AS total_value
+FROM
+    ORDERS o
+JOIN
+    PRODUCTS p ON o.CATEGORY_ID = p.CATEGORY_ID
+JOIN
+    PRODUCT_CATEGORIES pc ON p.CATEGORY_ID = pc.ID
+GROUP BY
+    pc.CATEGORY_NAME;"
+"What is the total inventory value, calculated as the product of clicks and average savings, for each category in our stores?",COUPON_PLATFORM,"SELECT 
+    S.CATEGORYID, 
+    SUM(S.CLICKS * T.AVERAGESAVINGS) AS TOTAL_INVENTORY_VALUE
+FROM 
+    STORES S
+JOIN 
+    TRANSACTIONS T ON S.ID = T.PROGRAM
+GROUP BY 
+    S.CATEGORYID;"
+What is the sum of the computed inventory value (clicks times average savings) grouped by category in all our stores?,COUPON_PLATFORM,"SELECT STORES.CATEGORYID, SUM(TRANSACTIONS.ORDERTOTAL) AS TotalSales
+FROM STORES
+JOIN TRANSACTIONS ON STORES.ID = TRANSACTIONS.STOREID
+GROUP BY STORES.CATEGORYID;
+"
+"What is the count of coupons for each store category including those with no category in our stores? Mark these ""no category""",COUPON_PLATFORM,"SELECT STOREID, COUNT(*) as CouponCount
+FROM COUPONS
+WHERE STOREID IS NOT NULL
+GROUP BY STOREID
+ORDER BY STOREID;"
+"How many coupons are there in each store category (with a separate count for coupons with no category)? Mark these ""no category""",COUPON_PLATFORM,"SELECT STOREID, COUNT(*) as CouponsCount, SUM(CASE WHEN COUPONID IS NULL THEN 1 ELSE 0 END) as NoCategoryCouponsCount
+FROM COUPONS
+GROUP BY STOREID;"
+What is the month-over-month percentage growth in total commissions for each month?,COUPON_PLATFORM,"SELECT 
+    MONTH(TRANSACTIONDATE) AS MONTH,
+    COUNT(*) / (SELECT COUNT(*) FROM TRANSACTIONS WHERE MONTH(TRANSACTIONDATE) = t.MONTH) * 100 AS PERCENTAGE_GROWTH
+FROM 
+    TRANSACTIONS t
+GROUP BY 
+    MONTH(TRANSACTIONDATE);"
+What is the percent change in total commissions from the previous month to each subsequent month?,COUPON_PLATFORM,"SELECT 
+    (SUM(COMMISSIONVALUE) FILTER (WHERE MONTH(TRANSACTIONDATE) = 1) / SUM(COMMISSIONVALUE) FILTER (WHERE MONTH(TRANSACTIONDATE) = 2) - 1) * 100 AS PERCENT_CHANGE
+FROM 
+    TRANSACTIONS
+WHERE 
+    YEAR(TRANSACTIONDATE) = 2022;"
+What is the month-over-month percentage growth rate in newsletter subscriptions for each month?,COUPON_PLATFORM,"SELECT 
+    SUBSTR(CREATIONDATE, 5, 2) AS MONTH,
+    COUNT(*) / (SELECT COUNT(*) FROM NEWSLETTERS) * 100 AS PERCENTAGE
+FROM 
+    NEWSLETTERS
+GROUP BY 
+    MONTH
+ORDER BY 
+    MONTH;"
+Can you tell me the percentage change in the number of subscribers to our newsletter from one month to the next?,COUPON_PLATFORM,"SELECT (next_month_subscribers - current_subscribers) / current_subscribers * 100 AS percentage_change
+FROM (
+    SELECT SUM(SUBSTR(STORES, 16, 10)) AS current_subscribers
+    FROM STORES
+    WHERE STORES LIKE '%SUBSCRIBERS%'
+) AS current_subscribers,
+(
+    SELECT SUM(SUBSTR(STORES, 16, 10)) AS next_month_subscribers
+    FROM STORES
+    WHERE STORES LIKE '%SUBSCRIBERS%'
+    AND DATE(STORES) > DATE('now', '-1 month')
+) AS next_month_subscribers;"
+"What is the month-over-month percentage change in total commissions from transactions where coupons were used, for each month and year?",COUPON_PLATFORM,"SELECT 
+    EXTRACT(MONTH FROM TRANSACTIONDATE) AS MONTH,
+    EXTRACT(YEAR FROM TRANSACTIONDATE) AS YEAR,
+    COUNT(DISTINCT CASE WHEN COUPONID IS NOT NULL THEN 1 END) / COUNT(*) * 100 AS MONTH_OVER_MONTH_PERCENTAGE_USED_COUPONS
+FROM 
+    TRANSACTIONS
+GROUP BY 
+    EXTRACT(MONTH FROM TRANSACTIONDATE),
+    EXTRACT(YEAR FROM TRANSACTIONDATE)
+ORDER BY 
+    EXTRACT(YEAR FROM TRANSACTIONDATE),
+    EXTRACT(MONTH FROM TRANSACTIONDATE);"
+"Can we see a comparison of the total commissions from transactions where coupons were used, for each month and year, along with the month-over-month percentage change?",COUPON_PLATFORM,"WITH monthly_commissions AS (
+    SELECT
+        EXTRACT(YEAR FROM TRANSACTIONDATE) AS year,
+        EXTRACT(MONTH FROM TRANSACTIONDATE) AS month,
+        SUM(COMMISSIONVALUE) AS total_commission
+    FROM
+        TRANSACTIONS
+    WHERE
+        COUPONID IS NOT NULL
+    GROUP BY
+        year, month
+),
+commissions_with_lag AS (
+    SELECT
+        mc.*,
+        LAG(mc.total_commission) OVER (ORDER BY mc.year, mc.month) AS prev_total_commission
+    FROM
+        monthly_commissions mc
+)
+SELECT
+    year,
+    month,
+    total_commission,
+    ROUND(((total_commission - prev_total_commission) / NULLIF(prev_total_commission, 0)) * 100, 2) AS pct_change
+FROM
+    commissions_with_lag;"
+"Can you provide a list of all store details where the name contains the term ""eco-friendly"", regardless of case?",COUPON_PLATFORM,"SELECT * FROM STORES
+WHERE NAME LIKE '%eco-friendly%';"
+"Can you retrieve all records from the stores database where the store name includes the phrase ""eco-friendly"", without considering case sensitivity?",COUPON_PLATFORM,SELECT * FROM stores WHERE NAME LIKE '%eco-friendly%';
+"What are the total quantities for each product sold, extracted from a JSON structure in the transactions database?",COUPON_PLATFORM,"SELECT productid, COUNT(*) as quantity_sold
+FROM transactions
+GROUP BY productid;"
+"Can you provide a breakdown of each product's total quantity sold, where product details are extracted from a JSON format in the transactions database?",COUPON_PLATFORM,"SELECT PRODUCTID, SUM(ORDERTOTAL) as total_quantity_sold
+FROM TRANSACTIONS
+GROUP BY PRODUCTID;"
+What is the list of valid email addresses from the NEWSLETTERS table?,COUPON_PLATFORM,"SELECT
+    EMAIL
+FROM
+    NEWSLETTERS
+WHERE
+    EMAIL IS NOT NULL
+    AND EMAIL != '';"
+Can we extract the correct email addresses from our NEWSLETTERS database?,COUPON_PLATFORM,SELECT EMAIL FROM NEWSLETTERS;
+What are the yearly quarters during which the total sales exceeded $100?,COUPON_PLATFORM,"SELECT 
+    EXTRACT(YEAR FROM TRANSACTION_DATE) AS Year,
+    EXTRACT(QUARTER FROM TRANSACTION_DATE) AS Quarter,
+    SUM(ORDER_TOTAL) AS TotalSales
+FROM 
+    TRANSACTIONS
+WHERE 
+    ORDER_TOTAL > 100
+GROUP BY 
+    Year, Quarter
+ORDER BY 
+    Year, Quarter;"
+Can you list the years and their respective quarters where the total sales amount was over $100?,COUPON_PLATFORM,"SELECT YEAR, QUARTER, SUM(SALES_AMOUNT) as TOTAL_SALES
+FROM (
+    SELECT YEAR(TRANSACTION_DATE) as YEAR, QUARTER(TRANSACTION_DATE) as QUARTER, SUM(ORDER_TOTAL) as SALES_AMOUNT
+    FROM TRANSACTIONS
+    GROUP BY YEAR(TRANSACTION_DATE), QUARTER(TRANSACTION_DATE)
+)
+WHERE SALES_AMOUNT > 100
+GROUP BY YEAR, QUARTER
+ORDER BY YEAR, QUARTER;"
+What are the total sales for each month of each year in our transaction history?,COUPON_PLATFORM,"SELECT MONTH(TRANSACTIONDATE) AS MONTH, YEAR(TRANSACTIONDATE) AS YEAR, SUM(ORDERTOTAL) AS TOTAL_SALES
+FROM TRANSACTIONS
+GROUP BY MONTH(TRANSACTIONDATE), YEAR(TRANSACTIONDATE);"
+Can you provide a breakdown of our total sales by month and year?,COUPON_PLATFORM,"SELECT 
+    strftime('%Y-%m', TRANSACTIONS.TRANSACTIONDATE) as Month,
+    SUM(TRANSACTIONS.ORDERTOTAL) as TotalSales
+FROM 
+    TRANSACTIONS
+GROUP BY 
+    Month;"
+What are the actions performed by users within an hour of their login along with the corresponding times of login and action?,COUPON_PLATFORM,"SELECT
+    ua.USER_ID,
+    ul.LOGIN_TIME,
+    ua.ACTION_TIME,
+    ua.ACTION
+FROM
+    USER_LOGINS ul
+JOIN
+    USER_ACTIONS ua ON ua.USER_ID = ul.USER_ID
+WHERE
+    ua.ACTION_TIME BETWEEN ul.LOGIN_TIME AND DATEADD(hour, 1, ul.LOGIN_TIME);"
+Can you provide a list of users along with their login times and the actions they performed within an hour of logging in?,COUPON_PLATFORM,"SELECT 
+    U.USER_ID, 
+    U.USER_NAME, 
+    A.ACTION_TIME, 
+    A.ACTION_TYPE
+FROM 
+    USERS U
+JOIN 
+    USER_ACTIONS A ON U.USER_ID = A.USER_ID
+WHERE 
+    A.ACTION_TIME >= DATE_SUB(CURRENT_TIMESTAMP, INTERVAL 1 HOUR)"
+"What is the total sales and month-on-month growth rate for each product, grouped by year and month?",COUPON_PLATFORM,"WITH product_sales AS (
+    SELECT
+        ol.PRODUCT_ID,
+        EXTRACT(YEAR FROM o.ORDER_TIMESTAMP) AS year,
+        EXTRACT(MONTH FROM o.ORDER_TIMESTAMP) AS month,
+        SUM(ol.PRICE * ol.QUANTITY) AS total_sales
+    FROM
+        ORDER_LINES ol
+    JOIN
+        ORDERS o ON ol.ORDER_ID = o.ORDER_ID
+    GROUP BY
+        ol.PRODUCT_ID, year, month
+),
+sales_with_lag AS (
+    SELECT
+        ps.*,
+        LAG(ps.total_sales) OVER (PARTITION BY ps.PRODUCT_ID ORDER BY ps.year, ps.month) AS prev_total_sales
+    FROM
+        product_sales ps
+)
+SELECT
+    PRODUCT_ID,
+    year,
+    month,
+    total_sales,
+    ROUND(((total_sales - prev_total_sales) / NULLIF(prev_total_sales, 0)) * 100, 2) AS month_over_month_growth
+FROM
+    sales_with_lag;"
+Can we analyze how the total commissions and the monthly growth rates vary for each product on a monthly basis within each year?,COUPON_PLATFORM,"WITH product_commissions AS (
+    SELECT
+        PRODUCTID,
+        EXTRACT(YEAR FROM TRANSACTIONDATE) AS year,
+        EXTRACT(MONTH FROM TRANSACTIONDATE) AS month,
+        SUM(COMMISSIONVALUE) AS total_commission
+    FROM
+        TRANSACTIONS
+    WHERE
+        PRODUCTID IS NOT NULL
+    GROUP BY
+        PRODUCTID, year, month
+),
+commissions_with_lag AS (
+    SELECT
+        pc.*,
+        LAG(pc.total_commission) OVER (PARTITION BY pc.PRODUCTID ORDER BY pc.year, pc.month) AS prev_total_commission
+    FROM
+        product_commissions pc
+)
+SELECT
+    PRODUCTID,
+    year,
+    month,
+    total_commission,
+    ROUND(((total_commission - prev_total_commission) / NULLIF(prev_total_commission, 0)) * 100, 2) AS pct_change
+FROM
+    commissions_with_lag;"
+What is the average order amount for each gender of customers?,ECOM,"SELECT GENDER, AVG(TOTAL_AMT) AS AVERAGE_ORDER_AMOUNT
+FROM ORDERS
+GROUP BY GENDER;"
+What is the comparison of the average order value between male and female customers?,ECOM,"SELECT GENDER, AVG(TOTAL_AMT) AS Average_Order_Value
+FROM ORDERS
+JOIN CUSTOMERS ON ORDERS.CUSTOMER_ID = CUSTOMERS.ID
+WHERE GENDER = 'Male'
+GROUP BY GENDER;"
+What is the average total discount amount received per order for each gender?,ECOM,"SELECT GENDER, AVG(TOTAL_AMT * DISCOUNT_PRICE) AS AVG_DISCOUNT FROM ORDERS JOIN CUSTOMERS ON ORDERS.CUSTOMER_ID = CUSTOMERS.ID GROUP BY GENDER;"
+How much discount on average do male and female customers receive per order?,ECOM,"SELECT GENDER, AVG(DISCOUNT_PRICE) as Average_Discount
+FROM ORDERS
+JOIN CUSTOMERS ON ORDERS.CUSTOMER_ID = CUSTOMERS.ID
+GROUP BY GENDER;"
+What is the total inventory cost for each product category in our database?,ECOM,"SELECT PRODUCTS.CATEGORY_ID, SUM(INVENTORY.COST * INVENTORY.QUANTITY) AS TotalCost
+FROM PRODUCTS
+JOIN INVENTORY ON PRODUCTS.ID = INVENTORY.PRODUCT_ID
+GROUP BY PRODUCTS.CATEGORY_ID;"
+"Can you tell me the total cost of inventory, grouped by product category?",ECOM,"SELECT PRODUCTS.CATEGORY_ID, SUM(INVENTORY.COST) AS TOTAL_COST
+FROM PRODUCTS
+JOIN INVENTORY ON PRODUCTS.ID = INVENTORY.PRODUCT_ID
+GROUP BY PRODUCTS.CATEGORY_ID;"
+What is the total value of the inventory for each product category?,ECOM,"SELECT P.CATEGORY_ID, P.NAME, SUM(I.QUANTITY * I.COST) AS Total_Inventory_Value
+FROM PRODUCTS P
+JOIN INVENTORY I ON P.ID = I.PRODUCT_ID
+GROUP BY P.CATEGORY_ID, P.NAME;"
+"For each category of products, what is the total value of the goods in the inventory?",ECOM,"SELECT PRODUCTS.CATEGORY_ID, SUM(INVENTORY.QUANTITY * PRODUCTS.PRICE) AS TotalValue FROM PRODUCTS INNER JOIN INVENTORY ON PRODUCTS.ID = INVENTORY.PRODUCT_ID GROUP BY PRODUCTS.CATEGORY_ID;"
+What is the total inventory margin for each product category in our database?,ECOM,"SELECT PRODUCTS.CATEGORY_ID, SUM(INVENTORY.QUANTITY * PRODUCTS.PRICE) - SUM(ORDER_LINES.PRICE * ORDER_LINES.QUANTITY) AS total_margin
+FROM PRODUCTS
+JOIN INVENTORY ON PRODUCTS.ID = INVENTORY.PRODUCT_ID
+JOIN ORDER_LINES ON PRODUCTS.ID = ORDER_LINES.PRODUCT_ID
+GROUP BY PRODUCTS.CATEGORY_ID;"
+Can you give me the aggregate inventory profit by product category?,ECOM,"WITH sales AS (
+    SELECT
+        p.CATEGORY_ID,
+        SUM(ol.PRICE * ol.QUANTITY) AS total_sales_revenue
+    FROM
+        ORDER_LINES ol
+    JOIN
+        PRODUCTS p ON ol.PRODUCT_ID = p.ID
+    GROUP BY
+        p.CATEGORY_ID
+),
+inventory_cost AS (
+    SELECT
+        p.CATEGORY_ID,
+        SUM(COALESCE(i.QUANTITY, 0) * COALESCE(i.COST, 0)) AS total_inventory_cost
+    FROM
+        PRODUCTS p
+    LEFT JOIN
+        INVENTORY i ON p.ID = i.PRODUCT_ID
+    GROUP BY
+        p.CATEGORY_ID
+)
+SELECT
+    s.CATEGORY_ID,
+    s.total_sales_revenue,
+    ic.total_inventory_cost,
+    (s.total_sales_revenue - ic.total_inventory_cost) AS inventory_profit
+FROM
+    sales s
+JOIN
+    inventory_cost ic ON s.CATEGORY_ID = ic.CATEGORY_ID;
+"
+What is the average rating for products with more than 10 reviews in each product category?,ECOM,"SELECT PRODUCT_ID, COUNT(*) as Review_Count FROM PRODUCT_REVIEWS GROUP BY PRODUCT_ID HAVING COUNT(*) > 10;"
+"What is the mean score of products in each category, considering only those products with more than 10 reviews?",ECOM,"SELECT PRODUCT_CATEGORIES.CATEGORY_NAME, AVG(PRODUCT_REVIEWS.RATING_STARS) as Mean_Rating
+FROM PRODUCT_CATEGORIES
+JOIN PRODUCT_REVIEWS ON PRODUCT_CATEGORIES.ID = PRODUCT_REVIEWS.PRODUCT_ID
+GROUP BY PRODUCT_CATEGORIES.CATEGORY_NAME
+HAVING COUNT(PRODUCT_REVIEWS.ID) > 10;"
+What is the total inventory value for each product category in the inventory?,ECOM,"SELECT P.CATEGORY_ID, P.NAME, SUM(I.QUANTITY * I.COST) AS TotalValue
+FROM PRODUCTS P
+JOIN INVENTORY I ON P.ID = I.PRODUCT_ID
+GROUP BY P.CATEGORY_ID, P.NAME;"
+Can you provide the summation of the product of quantity and price for each category in our inventory?,ECOM,"SELECT PRODUCT_CATEGORIES.CATEGORY_NAME, SUM(INVENTORY.QUANTITY * PRODUCTS.PRICE) AS TOTAL_PRODUCT_COST
+FROM INVENTORY
+JOIN PRODUCTS ON INVENTORY.PRODUCT_ID = PRODUCTS.ID
+JOIN PRODUCT_CATEGORIES ON PRODUCTS.CATEGORY_ID = PRODUCT_CATEGORIES.ID
+GROUP BY PRODUCT_CATEGORIES.CATEGORY_NAME;
+"
+"What are the total quantities sold for each product, along with their names and categories?",ECOM,"SELECT P.NAME, P.CATEGORY_ID, SUM(OL.QUANTITY) AS Total_Quantity
+FROM ORDERS O
+JOIN ORDER_LINES OL ON O.ID = OL.ORDER_ID
+JOIN PRODUCTS P ON OL.PRODUCT_ID = P.ID
+GROUP BY P.NAME, P.CATEGORY_ID;"
+Can you provide a list of products with their respective categories and the total quantities sold for each?,ECOM,"SELECT P.NAME, PC.CATEGORY_NAME, SUM(OL.QUANTITY) AS TOTAL_QUANTITY
+FROM ORDERS O
+JOIN ORDER_LINES OL ON O.ID = OL.ORDER_ID
+JOIN PRODUCTS P ON OL.PRODUCT_ID = P.ID
+JOIN PRODUCT_CATEGORIES PC ON P.CATEGORY_ID = PC.ID
+GROUP BY P.NAME, PC.CATEGORY_NAME;"
+What is the total payment amount per customer in our database?,ECOM,"SELECT CUSTOMERS.ID, SUM(PAYMENT_TRANSACTIONS.AMOUNT) as TotalPayment FROM CUSTOMERS JOIN PAYMENT_TRANSACTIONS ON CUSTOMERS.ID = PAYMENT_TRANSACTIONS.ORDER_ID GROUP BY CUSTOMERS.ID;"
+Can you provide a summary of the total payments made by each customer?,ECOM,"SELECT CUSTOMERS.ID, SUM(PAYMENT_TRANSACTIONS.AMOUNT) AS Total_Payments FROM CUSTOMERS JOIN PAYMENT_TRANSACTIONS ON CUSTOMERS.ID = PAYMENT_TRANSACTIONS.ORDER_ID GROUP BY CUSTOMERS.ID;"
+What is the average salary per department in the company?,ECOM,"SELECT DEPARTMENTS.DEPARTMENT_NAME, AVG(EMPLOYEES.SALARY) AS AVERAGE_SALARY
+FROM DEPARTMENTS
+JOIN EMPLOYEES ON DEPARTMENTS.ID = EMPLOYEES.DEPARTMENT_ID
+GROUP BY DEPARTMENTS.DEPARTMENT_NAME;"
+Can you tell me the mean wage for each department within our organization?,ECOM,"SELECT DEPARTMENTS.DEPARTMENT_NAME, AVG(EMPLOYEES.SALARY) AS Mean_Wage
+FROM DEPARTMENTS
+JOIN EMPLOYEES ON DEPARTMENTS.ID = EMPLOYEES.DEPARTMENT_ID
+GROUP BY DEPARTMENTS.DEPARTMENT_NAME;"
+What are the total order amounts for each category where there are more than 5 orders?,ECOM,"SELECT CATEGORY_ID, COUNT(*) as total_orders
+FROM ORDERS
+GROUP BY CATEGORY_ID
+HAVING COUNT(*) > 5;"
+Can you provide the total amounts of orders for each category that have more than 5 orders?,ECOM,"SELECT PRODUCT_CATEGORIES.CATEGORY_NAME, COUNT(ORDERS.ID) as Total_Orders
+FROM PRODUCT_CATEGORIES
+JOIN ORDERS ON PRODUCT_CATEGORIES.ID = ORDERS.CATEGORY_ID
+GROUP BY PRODUCT_CATEGORIES.CATEGORY_NAME
+HAVING COUNT(ORDERS.ID) > 5;"
+What are the total order amounts for each category where the category has more than 5 orders?,ECOM,"SELECT O.CATEGORY_ID, SUM(O.TOTAL_AMT) as TotalAmount
+FROM ORDERS O
+GROUP BY O.CATEGORY_ID
+HAVING COUNT(O.CATEGORY_ID) > 5;"
+"Can you calculate the sum of total amounts for each product category, but only for categories that have been ordered more than 5 times?",ECOM,"SELECT AVG(age) as average_age
+FROM CUSTOMERS
+WHERE registered_at IS NOT NULL;"
+What is the average price and average rating for each product category in our inventory?,ECOM,"SELECT PRODUCTS.CATEGORY_ID, AVG(PRODUCTS.PRICE) AS AveragePrice, AVG(PRODUCTS_DETAILS.PRODUCT_INFO->'rating') AS AverageRating
+FROM PRODUCTS
+JOIN PRODUCTS_DETAILS ON PRODUCTS.ID = PRODUCTS_DETAILS.PRODUCT_ID
+GROUP BY PRODUCTS.CATEGORY_ID;"
+Can you provide a breakdown of the average price per product and average rating per product for each category in our product line?,ECOM,"WITH avg_rating_per_product AS (
+    SELECT
+        PRODUCT_ID,
+        AVG(RATING_STARS) AS avg_rating
+    FROM
+        PRODUCT_REVIEWS
+    GROUP BY
+        PRODUCT_ID
+)
+SELECT
+    p.CATEGORY_ID,
+    AVG(p.PRICE) AS avg_price_per_product,
+    AVG(arp.avg_rating) AS avg_rating_per_product
+FROM
+    PRODUCTS p
+LEFT JOIN
+    avg_rating_per_product arp ON p.ID = arp.PRODUCT_ID
+GROUP BY
+    p.CATEGORY_ID;"
+"What is the total amount of payments made by each customer, including those who made no payments?",ECOM,"SELECT
+    c.ID AS customer_id,
+    COALESCE(SUM(pt.AMOUNT), 0) AS total_payments
+FROM
+    CUSTOMERS c
+LEFT JOIN
+    ORDERS o ON c.ID = o.CUSTOMER_ID
+LEFT JOIN
+    PAYMENT_TRANSACTIONS pt ON o.ORDER_ID = pt.ORDER_ID
+GROUP BY
+    c.ID;"
+"Can you provide a summary of total payments for each customer, considering that some customers might not have made any payments?",ECOM,"SELECT
+    c.ID AS customer_id,
+    COALESCE(SUM(pt.AMOUNT), 0) AS total_payments
+FROM
+    CUSTOMERS c
+LEFT JOIN
+    ORDERS o ON c.ID = o.CUSTOMER_ID
+LEFT JOIN
+    PAYMENT_TRANSACTIONS pt ON o.ORDER_ID = pt.ORDER_ID
+GROUP BY
+    c.ID;"
+"Can you provide a list of all products that have the term ""eco-friendly"" in their names, regardless of case sensitivity?",ECOM,"SELECT PRODUCTS.NAME
+FROM PRODUCTS
+WHERE LOWER(PRODUCTS.NAME) LIKE '%eco-friendly%';"
+"Can we identify all the items in our product database that contain the descriptor ""eco-friendly"" in their name, without considering the case of the letters?",ECOM,SELECT * FROM PRODUCTS WHERE NAME LIKE '%eco-friendly%';
+What are the actions performed by users within an hour of logging in?,ECOM,"SELECT ACTION, COUNT(*) as HOUR
+FROM USER_ACTIONS
+WHERE ACTION_TIME >= DATE_TRUNC('hour', CURRENT_TIMESTAMP)
+GROUP BY ACTION;"
+Can you provide a list of user actions and their corresponding times that occurred within an hour after the users logged in?,ECOM,"SELECT ACTION, ACTION_TIME
+FROM USER_ACTIONS
+WHERE ACTION_TIME > (SELECT MAX(LOGIN_TIME) - INTERVAL '1 hour' FROM USER_LOGINS);"
+"What is the average age of customers, total number of customers, total number of orders, and total payment amount, grouped by the year and quarter in which they registered?",ECOM,"SELECT 
+    EXTRACT(YEAR FROM REGISTERED_AT) AS Year,
+    EXTRACT(QUARTER FROM REGISTERED_AT) AS Quarter,
+    COUNT(ID) AS Total_Customers,
+    AVG(AGE) AS Average_Age,
+    SUM(TOTAL_AMT) AS Total_Payment_Amount,
+    SUM(COUNT(ID)) AS Total_Orders
+FROM 
+    CUSTOMERS
+GROUP BY 
+    Year, Quarter;"
+"Can you provide a breakdown of average customer age, customer count, order count, and total payments, segmented by registration year and quarter?",ECOM,"SELECT
+    EXTRACT(YEAR FROM c.REGISTERED_AT) AS registration_year,
+    EXTRACT(QUARTER FROM c.REGISTERED_AT) AS registration_quarter,
+    AVG(c.AGE) AS average_age,
+    COUNT(c.ID) AS customer_count,
+    COUNT(o.ID) AS order_count,
+    SUM(pt.AMOUNT) AS total_payments
+FROM
+    CUSTOMERS c
+LEFT JOIN
+    ORDERS o ON c.ID = o.CUSTOMER_ID
+LEFT JOIN
+    PAYMENT_TRANSACTIONS pt ON o.ORDER_ID = pt.ORDER_ID
+GROUP BY
+    registration_year, registration_quarter;"
+What are the product IDs with an average rating higher than 3 stars and have been rated more than 5 times?,ECOM,"SELECT PRODUCT_ID
+FROM PRODUCT_REVIEWS
+GROUP BY PRODUCT_ID
+HAVING AVG(RATING_STARS) > 3 AND COUNT(*) > 5;"
+Can you provide a list of product IDs that have an average rating of more than 3 stars and have received more than 5 ratings?,ECOM,"SELECT PRODUCTS.ID
+FROM PRODUCTS
+JOIN PRODUCT_REVIEWS ON PRODUCTS.ID = PRODUCT_REVIEWS.PRODUCT_ID
+GROUP BY PRODUCTS.ID
+HAVING AVG(PRODUCT_REVIEWS.RATING_STARS) > 3 AND COUNT(PRODUCT_REVIEWS.ID) > 5;"
+"What is the headcount for each department, including those employees who are not assigned to any department? For such cases, use ""no department""",ECOM,"SELECT ZIP_CODE, COUNT(ID) as Number_of_Customers
+FROM CUSTOMERS
+GROUP BY ZIP_CODE;"
+"How many employees are there in each department, considering also the employees who do not belong to any department? For such cases, use ""no department""",ECOM,SELECT * from customers
+"How many employees are in each department, including those who are not assigned to any department? For such cases, use ""no department""",ECOM,"SELECT
+    COALESCE(d.DEPARTMENT_NAME, 'no department') AS department_name,
+    COUNT(e.ID) AS employee_count
+FROM
+    EMPLOYEES e
+LEFT JOIN
+    DEPARTMENTS d ON e.DEPARTMENT_ID = d.ID
+GROUP BY
+    department_name;"
+"Can you provide the headcount for each department, while considering employees who are not affiliated with any department? For such cases, use ""no department""",ECOM,"SELECT AVG(c.AGE) as Average_Age
+FROM CUSTOMERS c
+JOIN ORDERS o ON c.ID = o.CUSTOMER_ID;"
+"What is the percentage of out of stock items, grouped by category id in our inventory?",ECOM,"SELECT PRODUCTS.CATEGORY_ID, SUM(INVENTORY.QUANTITY) AS total_quantity, SUM(PRODUCTS.PRICE) AS total_price
+FROM PRODUCTS
+JOIN INVENTORY ON PRODUCTS.ID = INVENTORY.PRODUCT_ID
+WHERE INVENTORY.QUANTITY = 0
+GROUP BY PRODUCTS.CATEGORY_ID;"
+"What is the distribution of out of stock items as a percentage of total items, for each category id in our product list?",ECOM,"SELECT PRODUCT_CATEGORIES.CATEGORY_NAME, (SUM(INVENTORY.QUANTITY) - SUM(ORDERS.TOTAL_AMT)) / SUM(INVENTORY.QUANTITY) * 100 AS OUT_OF_STOCK_PERCENTAGE
+FROM PRODUCTS
+JOIN INVENTORY ON PRODUCTS.ID = INVENTORY.PRODUCT_ID
+JOIN ORDERS ON PRODUCTS.ID = ORDERS.PRODUCT_ID
+JOIN PRODUCT_CATEGORIES ON PRODUCTS.CATEGORY_ID = PRODUCT_CATEGORIES.ID
+GROUP BY PRODUCT_CATEGORIES.CATEGORY_NAME;"
+"What is the percentage of available stock, grouped by product category?",ECOM,"SELECT PRODUCTS.CATEGORY_ID, SUM(INVENTORY.QUANTITY) AS total_stock
+FROM PRODUCTS
+JOIN INVENTORY ON PRODUCTS.ID = INVENTORY.PRODUCT_ID
+GROUP BY PRODUCTS.CATEGORY_ID;"
+"What is the proportion of products with positive quantity, separated by each product category?",ECOM,"SELECT P.CATEGORY_ID, P.NAME, SUM(O.QUANTITY) AS TOTAL_QUANTITY
+FROM ORDERS O
+JOIN PRODUCTS P ON O.PRODUCT_ID = P.ID
+GROUP BY P.CATEGORY_ID, P.NAME;"
+"What is the total inventory cost for each product category, assuming that the cost is zero for items with no recorded quantity or cost?",ECOM,"SELECT
+    p.CATEGORY_ID,
+    SUM(COALESCE(i.QUANTITY, 0) * COALESCE(i.COST, 0)) AS total_inventory_cost
+FROM
+    PRODUCTS p
+LEFT JOIN
+    INVENTORY i ON p.ID = i.PRODUCT_ID
+GROUP BY
+    p.CATEGORY_ID;"
+"Can you provide the aggregated cost of the inventory for each product category, treating items with no recorded quantity or cost as having a cost of zero?",ECOM,"SELECT PRODUCTS.CATEGORY_ID, COST_SUM(INVENTORY.COST) AS TOTAL_COST
+FROM PRODUCTS
+LEFT JOIN INVENTORY ON PRODUCTS.ID = INVENTORY.PRODUCT_ID
+GROUP BY PRODUCTS.CATEGORY_ID;"
+"What is the total value of inventory for each product category, considering that some products may not have a quantity or price specified?",ECOM,"SELECT P.CATEGORY_ID, P.NAME, IFNULL(SUM(I.QUANTITY * P.PRICE), 0) AS Total_Inventory_Value
+FROM PRODUCTS P
+LEFT JOIN INVENTORY I ON P.ID = I.PRODUCT_ID
+GROUP BY P.CATEGORY_ID, P.NAME;"
+"What is the aggregate monetary worth of each category of products in our inventory, assuming that some items may not have a quantity or price assigned?",ECOM,"SELECT PRODUCTS.CATEGORY_ID, total_worth(INVENTORY.COST * INVENTORY.QUANTITY) as total_worth
+FROM PRODUCTS
+JOIN INVENTORY ON PRODUCTS.ID = INVENTORY.PRODUCT_ID
+GROUP BY PRODUCTS.CATEGORY_ID;"
+"How many products are there in each product category, including those without a category (label these as 'no category')?",ECOM,"SELECT 
+    CASE 
+        WHEN PRODUCTS.CATEGORY_ID IS NULL THEN 'no category'
+        ELSE PRODUCT_CATEGORIES.CATEGORY_NAME
+    END AS category_name,
+    COUNT(PRODUCTS.ID) AS product_count
+FROM 
+    PRODUCTS
+LEFT JOIN 
+    PRODUCT_CATEGORIES ON PRODUCTS.CATEGORY_ID = PRODUCT_CATEGORIES.ID
+GROUP BY 
+    CASE 
+        WHEN PRODUCTS.CATEGORY_ID IS NULL THEN 'no category'
+        ELSE PRODUCT_CATEGORIES.CATEGORY_NAME
+    END;"
+What is the count of products grouped by their categories? Include those that do not belong to any category as 'no category'?,ECOM,"SELECT CATEGORY_ID, COUNT(*) as PRODUCT_COUNT
+FROM PRODUCTS
+GROUP BY CATEGORY_ID
+UNION ALL
+SELECT NULL, COUNT(*) as PRODUCT_COUNT
+FROM PRODUCTS
+WHERE CATEGORY_ID IS NULL;
+"
+"What are the numbers of customers corresponding to each state, including an 'unknown state' category for customers with no state information?",ECOM,"SELECT 
+    ZIP_CODES.STATE, 
+    COUNT(CUSTOMERS.ID) AS CustomerCount,
+    CASE 
+        WHEN ZIP_CODES.STATE IS NULL THEN 'unknown state'
+        ELSE ZIP_CODES.STATE
+    END AS StateName
+FROM 
+    CUSTOMERS
+LEFT JOIN 
+    ZIP_CODES ON CUSTOMERS.ZIP_CODE = ZIP_CODES.ZIP_CODE
+GROUP BY 
+    ZIP_CODES.STATE;"
+"How many customers are there in each state, with customers who do not have a state associated with them being counted under 'unknown state'?",ECOM,"SELECT
+    COALESCE(z.STATE, 'unknown state') AS state,
+    COUNT(c.ID) AS customer_count
+FROM
+    CUSTOMERS c
+LEFT JOIN
+    ZIP_CODES z ON c.ZIP_CODE = z.ZIP_CODE
+GROUP BY
+    state;"
+What are the product names and their corresponding net masses in our product details database?,ECOM,"SELECT
+    p.NAME,
+    pd.PRODUCT_INFO:""net_mass""::VARCHAR AS net_mass
+FROM
+    PRODUCTS p
+JOIN
+    PRODUCTS_DETAILS pd ON p.ID = pd.PRODUCT_ID;"
+Can you provide a list of product names along with their respective net masses from our products details database?,ECOM,"SELECT PRODUCTS.NAME, SUM(ORDER_LINES.PRICE * ORDER_LINES.QUANTITY) AS NET_MASS
+FROM ORDERS
+JOIN ORDER_LINES ON ORDERS.ID = ORDER_LINES.ORDER_ID
+JOIN PRODUCTS ON ORDER_LINES.PRODUCT_ID = PRODUCTS.ID
+GROUP BY PRODUCTS.NAME;"
+Which customers have correctly formatted email addresses according to standard email validation rules?,ECOM,"SELECT ID FROM CUSTOMERS WHERE EMAIL REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$';"
+Can you provide a list of customers who have valid email addresses as per the standard email address format?,ECOM,"SELECT * FROM CUSTOMERS
+WHERE EMAIL REGEXP '^[A-Za-z0-9._%+-]+@[A-Za-z0-9.-]+\.[A-Za-z]{2,}$';"
+What are the producer websites from the products table that start with either 'http' or 'www.' and then have any number of alphanumeric characters or hyphens followed by a '.' and then 2 to 4 alphabets?,ECOM,"SELECT PRODUCER_WEBSITE
+FROM PRODUCTS
+WHERE PRODUCER_WEBSITE LIKE 'http://%' OR PRODUCER_WEBSITE LIKE 'https://%' OR PRODUCER_WEBSITE LIKE 'www.%';"
+"Can you provide the producer websites listed in the products table that follow a specific pattern, specifically starting with 'http' or 'www.', followed by alphanumeric characters or hyphens, then a period and lastly 2 to 4 alphabets?",ECOM,"SELECT
+    PRODUCER_WEBSITE
+FROM
+    PRODUCTS
+WHERE
+    REGEXP_LIKE(PRODUCER_WEBSITE, '^(http|www\\.)[A-Za-z0-9-]+\\.[A-Za-z]{2,4}$');"
+What are the total sales of each product by quarter and year based on the total discount price multiplied by the quantity?,ECOM,"SELECT 
+    O.CATEGORY_ID,
+    P.NAME,
+    SUM(OL.PRICE * OL.QUANTITY) AS Total_Sales,
+    SUM(OL.DISCOUNT_PRICE * OL.QUANTITY) AS Total_Discount_Sales,
+    SUM(P.PRICE * OL.QUANTITY) AS Total_Revenue,
+    DATE_TRUNC('quarter', O.ORDER_TIMESTAMP) AS Quarter,
+    DATE_TRUNC('year', O.ORDER_TIMESTAMP) AS Year
+FROM 
+    ORDERS O
+JOIN 
+    ORDER_LINES OL ON O.ID = OL.ORDER_ID
+JOIN 
+    PRODUCTS P ON OL.PRODUCT_ID = P.ID
+GROUP BY 
+    O.CATEGORY_ID, P.NAME, Quarter, Year
+ORDER BY 
+    Quarter, Year;"
+"Could you provide a quarterly and yearly breakdown of total sales, calculated using the total discount price times the quantity of each product sold?",ECOM,"SELECT SUM(ORDER_LINES.PRICE * ORDER_LINES.QUANTITY) AS QUARTERLY_SALES
+FROM ORDERS
+JOIN ORDER_LINES ON ORDERS.ID = ORDER_LINES.ORDER_ID
+WHERE EXTRACT(MONTH FROM ORDERS.ORDER_TIMESTAMP) BETWEEN 1 AND 3;SELECT SUM(ORDER_LINES.PRICE * ORDER_LINES.QUANTITY) AS YEARLY_SALES
+FROM ORDERS
+JOIN ORDER_LINES ON ORDERS.ID = ORDER_LINES.ORDER_ID
+WHERE EXTRACT(YEAR FROM ORDERS.ORDER_TIMESTAMP) = EXTRACT(YEAR FROM CURRENT_DATE);"
+"What is the total sales volume per month for each year in our database, where total sales is calculated as the sum of discount price times quantity for each order?",ECOM,"SELECT
+    EXTRACT(YEAR FROM o.ORDER_TIMESTAMP) AS year,
+    EXTRACT(MONTH FROM o.ORDER_TIMESTAMP) AS month,
+    SUM(ol.DISCOUNT_PRICE * ol.QUANTITY) AS total_sales_volume
+FROM
+    ORDER_LINES ol
+JOIN
+    ORDERS o ON ol.ORDER_ID = o.ORDER_ID
+GROUP BY
+    year, month;"
+"Can you provide a summary of total sales, broken down by month and year, where total sales is calculated based on the discount price and quantity of items sold in each order?",ECOM,"SELECT DEPARTMENTS.DEPARTMENT_NAME, SUM(ORDERS.TOTAL_AMT) as Total_Sales
+FROM ORDERS
+INNER JOIN EMPLOYEES ON ORDERS.CUSTOMER_ID = EMPLOYEES.ID
+INNER JOIN DEPARTMENTS ON EMPLOYEES.DEPARTMENT_ID = DEPARTMENTS.ID
+GROUP BY DEPARTMENTS.DEPARTMENT_NAME;"
