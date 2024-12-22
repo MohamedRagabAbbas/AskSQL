@@ -85,9 +85,10 @@ This model is based on the **DeepSeek Large Language Model (LLM)** framework (de
 
 ## Live Demo
 
-https://github.com/MohamedRagabAbbas/AskSQL/blob/main/live_demo.mp4
-
-
+<video width="320" height="240" controls>
+  <source src="https://youtu.be/OkegDb75XOo">
+  Your browser does not support the video tag.
+</video>
 
 
 
