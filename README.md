@@ -74,7 +74,7 @@ The final dataset has about **290,000** text-to-SQL samples.
 
 ---
 
-## Results
+## Base Model
 
 **Deepseek-coder-1.3b-instruct**  
 This model is based on the **DeepSeek Large Language Model (LLM)** framework (decoder-only Transformer).
