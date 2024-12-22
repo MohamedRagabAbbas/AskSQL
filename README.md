@@ -85,8 +85,9 @@ This model is based on the **DeepSeek Large Language Model (LLM)** framework (de
 
 ## Live Demo
 
-[![Watch the video](https://i.sstatic.net/Vp2cE.png)](https://youtu.be/OkegDb75XOo)
 
+
+https://github.com/user-attachments/assets/d549afeb-546b-483b-b68a-b50388072dd1
 
 
 
