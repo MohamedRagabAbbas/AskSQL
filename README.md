@@ -108,6 +108,6 @@ This section shows the score progression over different training phases compared
 <img src="assets/image5.png" width="900" height="601" >
 
 ## Contributors
-Mohamed Abbas
-Youssef Mansoor
+- **Mohamed Abbas**
+- **Youssef Mansoor**
 
