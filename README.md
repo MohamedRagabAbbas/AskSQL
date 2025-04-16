@@ -25,12 +25,8 @@ Given a natural language query (NLQ) on a Relational Database (RDB) with a speci
 ---
 
 ## Dataset
-We used the **NSText2SQL** dataset, which combines text-to-SQL pairs from over 20 public sources. Steps included:
-- Data Cleaning  
-- Pre-processing  
-- Table Schema Augmentation  
-- SQL Cleaning  
-- Instruction Generation (using existing LLMs)  
+We used the **NSText2SQL** dataset, which combines text-to-SQL pairs from over 20 public sources.
+
 
 The final dataset has about **290,000** text-to-SQL samples.
 <img src="assets/NS_dataset.png" width="900" height="600" >
