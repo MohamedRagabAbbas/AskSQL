@@ -98,6 +98,9 @@ https://github.com/user-attachments/assets/d549afeb-546b-483b-b68a-b50388072dd1
 
 ---
 
+## Poster
+<img src="Links to Weights and Dataset/poster.png" width="900" height="601" >
+
 ## Progress
 
 This section shows the score progression over different training phases compared to a baseline model on the Text-2-SQL benchmark.
